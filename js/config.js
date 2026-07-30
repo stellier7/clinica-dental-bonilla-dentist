@@ -81,8 +81,8 @@ const config = {
     // OPTIONAL — path or URL to logo (leave blank to show practice name as text logo)
     logoUrl: "assets/images/LOGO.jpeg",
     // REQUIRED — full-bleed hero image (place file in /assets/images/)
-    // Using logo as hero background
-    heroImageUrl: "assets/images/LOGO.jpeg",
+    // Demo template image
+    heroImageUrl: "assets/images/hero.jpg",
   },
 
   // ---------------------------------------------------------------------------
