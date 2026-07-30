@@ -22,48 +22,48 @@ const config = {
   // ---------------------------------------------------------------------------
   practice: {
     // REQUIRED — shown in hero, nav, footer, page title
-    name: "Sonrisa Dental",
+    name: "Clínica Dental Bonilla",
 
     // REQUIRED — warm one-line tagline under the practice name
     tagline: {
-      en: "Gentle care for healthier, brighter smiles.",
-      es: "Cuidado gentil para sonrisas más sanas y radiantes.",
+      en: "We offer all types of dental treatments with a team of specialists.",
+      es: "Ofrecemos todo tipo de tratamientos dentales, contamos con un equipo de especialistas.",
     },
 
     // REQUIRED — used for click-to-call (tel:) links. Digits only recommended for telHref.
-    phone: "(305) 555-0148",
+    phone: "+504 9887-5558",
     // REQUIRED — raw digits for tel: links (no spaces or punctuation)
-    phoneTel: "3055550148",
+    phoneTel: "+50498875558",
 
     // REQUIRED — display address and map/directions helpers
     address: {
-      street: "1842 Coral Way",
-      city: "Miami",
-      state: "FL",
-      zip: "33145",
+      street: "Pasaje Andará - Flores, Primera planta, Barrio Torondón",
+      city: "Comayagua",
+      state: "Honduras",
+      zip: "12101",
       // OPTIONAL — override the Google Maps query; leave blank to auto-build from address
-      mapsQuery: "",
+      mapsQuery: "Pasaje Andará Flores, Barrio Torondón, Comayagua, Honduras",
     },
 
     // REQUIRED — hours shown in Location + Footer. Use empty string to omit a day.
     hours: {
-      mon: "9:00 AM – 6:00 PM",
-      tue: "9:00 AM – 6:00 PM",
-      wed: "9:00 AM – 6:00 PM",
-      thu: "9:00 AM – 6:00 PM",
-      fri: "9:00 AM – 4:00 PM",
-      sat: "9:00 AM – 1:00 PM",
+      mon: "8:00 AM – 5:00 PM",
+      tue: "8:00 AM – 5:00 PM",
+      wed: "8:00 AM – 5:00 PM",
+      thu: "8:00 AM – 5:00 PM",
+      fri: "8:00 AM – 5:00 PM",
+      sat: "8:00 AM – 5:00 PM",
       sun: "", // closed / leave blank to hide
     },
 
     // OPTIONAL — email shown in footer when present
-    email: "hola@sonrisadental.com",
+    email: "clinicadentalbonillahn@gmail.com",
 
     // OPTIONAL — trust bar stats (leave a field blank to hide that trust item)
-    yearsInPractice: "15+",
-    patientRating: "4.9",
+    yearsInPractice: "",
+    patientRating: "",
     // OPTIONAL — short insurance blurb for trust bar
-    insuranceAccepted: true,
+    insuranceAccepted: false,
   },
 
   // ---------------------------------------------------------------------------
@@ -71,15 +71,15 @@ const config = {
   // ---------------------------------------------------------------------------
   branding: {
     // REQUIRED — soft clinical blue (CSS color value)
-    primaryColor: "#3A7CA5",
+    primaryColor: "#0B5EA8",
     // REQUIRED — warmer accent for CTAs / highlights (avoid neon or flashy tones)
-    accentColor: "#2F9B8A",
+    accentColor: "#00C4E0",
     // OPTIONAL — deeper shade for hover states; leave blank to auto-derive
-    primaryDark: "#2E6284",
+    primaryDark: "#073F70",
     // OPTIONAL — soft page wash behind sections
-    softBg: "#F4F8FB",
+    softBg: "#F0F8FF",
     // OPTIONAL — path or URL to logo (leave blank to show practice name as text logo)
-    logoUrl: "",
+    logoUrl: "assets/images/logo.png",
     // REQUIRED — full-bleed hero image (place file in /assets/images/)
     // Demo template image included — replace per client
     heroImageUrl: "assets/images/hero.jpg",
@@ -116,8 +116,8 @@ const config = {
       sections: {
         services: "Our Services",
         servicesLead: "Comprehensive care for every smile.",
-        dentists: "Meet the Dentist",
-        dentistsLead: "Care that feels personal from the first visit.",
+        dentists: "Meet Our Dentists",
+        dentistsLead: "Specialized care from experienced professionals.",
         gallery: "Smile Gallery",
         galleryLead: "Real results from patients like you.",
         testimonials: "What Patients Say",
@@ -125,7 +125,7 @@ const config = {
         insurance: "Insurance & Financing",
         insuranceLead: "We work with major providers to keep care accessible.",
         location: "Visit Us",
-        locationLead: "Conveniently located — we look forward to seeing you.",
+        locationLead: "Conveniently located in Comayagua — we look forward to seeing you.",
       },
       services: {
         expand: "Learn more",
@@ -187,8 +187,8 @@ const config = {
       sections: {
         services: "Nuestros Servicios",
         servicesLead: "Cuidado integral para cada sonrisa.",
-        dentists: "Conoce al Dentista",
-        dentistsLead: "Atención cercana desde la primera visita.",
+        dentists: "Nuestros Dentistas",
+        dentistsLead: "Atención especializada de profesionales experimentados.",
         gallery: "Galería de Sonrisas",
         galleryLead: "Resultados reales de pacientes como tú.",
         testimonials: "Lo Que Dicen Nuestros Pacientes",
@@ -196,7 +196,7 @@ const config = {
         insurance: "Seguros y Financiamiento",
         insuranceLead: "Trabajamos con las principales aseguradoras.",
         location: "Visítanos",
-        locationLead: "Ubicación conveniente — te esperamos con gusto.",
+        locationLead: "Ubicación conveniente en Comayagua — te esperamos con gusto.",
       },
       services: {
         expand: "Ver más",
@@ -240,18 +240,32 @@ const config = {
   // REQUIRED — at least one dentist. Empty array hides the whole section.
   dentists: [
     {
-      name: "Dr. Carlos Mendoza",
+      name: "Dr. Adolfo Bonilla",
       title: {
-        en: "Lead Dentist · DDS",
-        es: "Dentista Principal · DDS",
+        en: "Orthodontics Specialist · UNICAH Orthodontics Residency",
+        es: "Especialista en Ortodoncia · Residente de la Especialidad de Ortodoncia UNICAH",
       },
       bio: {
-        en: "Dr. Mendoza has cared for Miami families for over a decade. He believes great dentistry starts with listening — and that every visit should feel calm, clear, and kind.",
-        es: "El Dr. Mendoza ha cuidado a familias de Miami por más de una década. Cree que una gran odontología empieza escuchando — y que cada visita debe sentirse calmada, clara y cercana.",
+        en: "Dr. Bonilla is dedicated to creating beautiful, healthy smiles through advanced orthodontic treatments. His commitment to continuing education ensures patients receive the most modern and effective care available.",
+        es: "El Dr. Bonilla se dedica a crear sonrisas hermosas y saludables mediante tratamientos de ortodoncia avanzados. Su compromiso con la educación continua garantiza que los pacientes reciban la atención más moderna y efectiva disponible.",
       },
       // OPTIONAL — path/URL; leave blank for initials placeholder
       // Demo template image included — replace per client
-      photoUrl: "assets/images/dentist.jpg",
+      photoUrl: "assets/images/dentist-bonilla.jpg",
+    },
+    {
+      name: "Dr. Jorge Macia",
+      title: {
+        en: "General Dentist",
+        es: "Odontólogo General",
+      },
+      bio: {
+        en: "Dr. Macia provides comprehensive dental care with a gentle touch. His focus on patient comfort and thorough communication ensures every visit is a positive experience for patients of all ages.",
+        es: "El Dr. Macia brinda atención dental integral con un toque gentil. Su enfoque en la comodidad del paciente y la comunicación clara garantiza que cada visita sea una experiencia positiva para pacientes de todas las edades.",
+      },
+      // OPTIONAL — path/URL; leave blank for initials placeholder
+      // Demo template image included — replace per client
+      photoUrl: "assets/images/dentist-macia.jpg",
     },
   ],
 
@@ -263,52 +277,76 @@ const config = {
   // "aligners", "emergency", "implants", "pediatric", "general", "cosmetic")
   services: [
     {
-      name: { en: "Cleanings & Exams", es: "Limpiezas y Exámenes" },
+      name: { en: "Dental Cleanings & Prevention", es: "Limpiezas Dentales y Prevención" },
       description: {
-        en: "Gentle preventive care to keep gums healthy and catch concerns early — comfortable visits for the whole family.",
-        es: "Cuidado preventivo suave para mantener encías sanas y detectar problemas a tiempo — visitas cómodas para toda la familia.",
+        en: "Professional cleanings to remove plaque and tartar, keeping your teeth and gums healthy. Regular cleanings help prevent cavities and gum disease.",
+        es: "Limpiezas profesionales para eliminar placa y sarro, manteniendo sus dientes y encías saludables. Las limpiezas regulares ayudan a prevenir caries y enfermedades de las encías.",
       },
       icon: "cleaning",
     },
     {
-      name: { en: "Teeth Whitening", es: "Blanqueamiento Dental" },
+      name: { en: "Aesthetic Restorations", es: "Restauraciones Estéticas" },
       description: {
-        en: "Professional whitening for a brighter smile with results that look natural — not overdone.",
-        es: "Blanqueamiento profesional para una sonrisa más luminosa con resultados naturales — nada exagerado.",
+        en: "Natural-looking fillings and restorations that blend seamlessly with your teeth, restoring both function and beauty to damaged teeth.",
+        es: "Rellenos y restauraciones de aspecto natural que se integran perfectamente con sus dientes, restaurando función y belleza a dientes dañados.",
       },
-      icon: "whitening",
+      icon: "cosmetic",
     },
     {
-      name: { en: "Invisalign", es: "Invisalign" },
+      name: { en: "Cavity Treatment", es: "Tratamiento de Caries" },
       description: {
-        en: "Clear aligners that straighten teeth discreetly, with personalized plans and check-ins along the way.",
-        es: "Alineadores transparentes que enderezan los dientes con discreción, con planes personalizados y seguimientos.",
+        en: "Early detection and gentle treatment of cavities to prevent further decay and preserve your natural tooth structure.",
+        es: "Detección temprana y tratamiento suave de caries para prevenir mayor deterioro y preservar la estructura natural del diente.",
       },
-      icon: "aligners",
+      icon: "general",
     },
     {
-      name: { en: "Emergency Care", es: "Atención de Emergencia" },
+      name: { en: "Root Canal Therapy", es: "Endodoncia" },
       description: {
-        en: "Same-day help for toothaches, chips, and urgent concerns — call us and we’ll do our best to see you quickly.",
-        es: "Ayuda el mismo día para dolores, fracturas y urgencias — llámanos y haremos lo posible por atenderte pronto.",
+        en: "Advanced root canal treatment to save infected teeth and eliminate pain, performed with precision and care for maximum comfort.",
+        es: "Tratamiento avanzado de conducto radicular para salvar dientes infectados y eliminar el dolor, realizado con precisión y cuidado para máxima comodidad.",
       },
       icon: "emergency",
     },
     {
-      name: { en: "Dental Implants", es: "Implantes Dentales" },
+      name: { en: "Tooth Extractions", es: "Extracciones Dentales" },
       description: {
-        en: "Restore missing teeth with durable, natural-looking implants planned for comfort and long-term function.",
-        es: "Recupera dientes perdidos con implantes duraderos y de aspecto natural, pensados para comodidad y función.",
+        en: "Safe and comfortable tooth removal when necessary, with options for sedation and detailed aftercare instructions for quick healing.",
+        es: "Extracción dental segura y cómoda cuando es necesario, con opciones de sedación e instrucciones detalladas de cuidado posterior para una rápida recuperación.",
+      },
+      icon: "general",
+    },
+    {
+      name: { en: "Dental Prosthetics & Dentures", es: "Prótesis Dentales" },
+      description: {
+        en: "Custom-fitted dentures and prosthetics to restore your smile and chewing function, designed for comfort and natural appearance.",
+        es: "Dentaduras y prótesis hechas a medida para restaurar su sonrisa y función masticatoria, diseñadas para comodidad y apariencia natural.",
       },
       icon: "implants",
     },
     {
-      name: { en: "Pediatric Dentistry", es: "Odontología Pediátrica" },
+      name: { en: "Professional Teeth Whitening", es: "Blanqueamiento Dental Profesional" },
       description: {
-        en: "Friendly visits that help kids feel at ease — building healthy habits and confident little smiles.",
-        es: "Visitas amables que ayudan a los niños a sentirse tranquilos — creando hábitos sanos y sonrisas confiadas.",
+        en: "Safe, effective whitening treatments that brighten your smile several shades, with results that last and look naturally radiant.",
+        es: "Tratamientos de blanqueamiento seguros y efectivos que iluminan su sonrisa varios tonos, con resultados duraderos y aspecto naturalmente radiante.",
       },
-      icon: "pediatric",
+      icon: "whitening",
+    },
+    {
+      name: { en: "Orthodontics & Braces", es: "Ortodoncia y Frenillos" },
+      description: {
+        en: "Comprehensive orthodontic treatment including traditional braces and modern options to straighten teeth and improve bite alignment.",
+        es: "Tratamiento de ortodoncia integral que incluye brackets tradicionales y opciones modernas para enderezar dientes y mejorar la alineación de la mordida.",
+      },
+      icon: "aligners",
+    },
+    {
+      name: { en: "Mulligan Arch Appliance", es: "Arco Mulligan" },
+      description: {
+        en: "Specialized orthodontic appliance for arch development and bite correction, custom-designed for optimal results and patient comfort.",
+        es: "Aparato de ortodoncia especializado para desarrollo del arco y corrección de mordida, diseñado a medida para resultados óptimos y comodidad del paciente.",
+      },
+      icon: "aligners",
     },
   ],
 
@@ -316,82 +354,29 @@ const config = {
   // TESTIMONIALS
   // ---------------------------------------------------------------------------
   // OPTIONAL — empty array hides the Testimonials section entirely.
-  testimonials: [
-    {
-      quote: {
-        en: "The team made my first visit so easy. Clear explanations, gentle care, and I finally look forward to cleanings.",
-        es: "El equipo hizo mi primera visita muy fácil. Explicaciones claras, cuidado gentil, y por fin espero con gusto las limpiezas.",
-      },
-      author: "María G.",
-      rating: 5,
-    },
-    {
-      quote: {
-        en: "Dr. Morales is wonderful with our kids. The office feels calm — never rushed — and everyone is so kind.",
-        es: "La Dra. Morales es maravillosa con nuestros hijos. El consultorio se siente calmado — nunca con prisa — y todos son muy amables.",
-      },
-      author: "Carlos R.",
-      rating: 5,
-    },
-    {
-      quote: {
-        en: "I started Invisalign here and the process has been smooth from day one. Highly recommend.",
-        es: "Empecé Invisalign aquí y el proceso ha sido fluido desde el primer día. Los recomiendo mucho.",
-      },
-      author: "Ana L.",
-      rating: 5,
-    },
-  ],
+  testimonials: [],
 
   // ---------------------------------------------------------------------------
   // INSURANCE LOGOS
   // ---------------------------------------------------------------------------
   // OPTIONAL — array of image URLs/paths. Empty array hides Insurance section.
   // Tip: drop SVGs/PNGs in /assets/images/insurance/ and reference them here.
-  insuranceLogos: [
-    {
-      name: "Delta Dental",
-      src: "assets/images/insurance/delta-dental.svg",
-    },
-    {
-      name: "Cigna",
-      src: "assets/images/insurance/cigna.svg",
-    },
-    {
-      name: "Aetna",
-      src: "assets/images/insurance/aetna.svg",
-    },
-    {
-      name: "MetLife",
-      src: "assets/images/insurance/metlife.svg",
-    },
-    {
-      name: "Guardian",
-      src: "assets/images/insurance/guardian.svg",
-    },
-  ],
+  insuranceLogos: [],
 
   // ---------------------------------------------------------------------------
   // SMILE GALLERY
   // ---------------------------------------------------------------------------
   // OPTIONAL — empty array hides the Gallery section.
   // Demo template images included — replace per client
-  gallery: [
-    "assets/images/gallery/smile-01.jpg",
-    "assets/images/gallery/smile-02.jpg",
-    "assets/images/gallery/smile-03.jpg",
-    "assets/images/gallery/smile-04.jpg",
-    "assets/images/gallery/smile-05.jpg",
-  ],
+  gallery: [],
 
   // ---------------------------------------------------------------------------
   // SOCIAL LINKS
   // ---------------------------------------------------------------------------
   // OPTIONAL — leave blank to hide that icon in the footer
-  // ⚠️ UPDATE THESE: Currently placeholder URLs. Replace with actual practice social profiles.
   socials: {
-    instagram: "", // e.g. "https://instagram.com/sonrisadental"
-    facebook: "", // e.g. "https://facebook.com/sonrisadental"
+    instagram: "https://www.instagram.com/clinicadentalbonilla.hn",
+    facebook: "https://www.facebook.com/cdentalbonilla.hn/",
   },
 };
 
