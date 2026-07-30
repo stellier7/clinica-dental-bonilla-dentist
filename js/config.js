@@ -79,10 +79,10 @@ const config = {
     // OPTIONAL — soft page wash behind sections
     softBg: "#F0F8FF",
     // OPTIONAL — path or URL to logo (leave blank to show practice name as text logo)
-    logoUrl: "assets/images/logo.png",
+    logoUrl: "assets/images/LOGO.jpeg",
     // REQUIRED — full-bleed hero image (place file in /assets/images/)
-    // Demo template image included — replace per client
-    heroImageUrl: "assets/images/hero.jpg",
+    // Using logo as hero background
+    heroImageUrl: "assets/images/LOGO.jpeg",
   },
 
   // ---------------------------------------------------------------------------
@@ -251,7 +251,7 @@ const config = {
       },
       // OPTIONAL — path/URL; leave blank for initials placeholder
       // Demo template image included — replace per client
-      photoUrl: "assets/images/dentist-bonilla.jpg",
+      photoUrl: "assets/images/dentist-bonilla.jpeg",
     },
     {
       name: "Dr. Jorge Macia",
@@ -265,7 +265,7 @@ const config = {
       },
       // OPTIONAL — path/URL; leave blank for initials placeholder
       // Demo template image included — replace per client
-      photoUrl: "assets/images/dentist-macia.jpg",
+      photoUrl: "assets/images/dentist-macia.jpeg",
     },
   ],
 
@@ -368,7 +368,13 @@ const config = {
   // ---------------------------------------------------------------------------
   // OPTIONAL — empty array hides the Gallery section.
   // Demo template images included — replace per client
-  gallery: [],
+  gallery: [
+    "assets/images/gallery/IMG_0124.jpeg",
+    "assets/images/gallery/IMG_0125.jpeg",
+    "assets/images/gallery/IMG_0126.jpeg",
+    "assets/images/gallery/IMG_0127.jpeg",
+    "assets/images/gallery/IMG_0128.jpeg",
+  ],
 
   // ---------------------------------------------------------------------------
   // SOCIAL LINKS
