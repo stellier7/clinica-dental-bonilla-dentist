@@ -199,7 +199,8 @@
     if (!digits) return "#";
     
     // WhatsApp link format: https://wa.me/1234567890?text=Message
-    const baseUrl = `https://wa.me/1${digits}`;
+    // phoneTel should already include country code (e.g., 50498875558 for Honduras)
+    const baseUrl = `https://wa.me/${digits}`;
     if (message) {
       const encodedMessage = encodeURIComponent(message);
       return `${baseUrl}?text=${encodedMessage}`;
