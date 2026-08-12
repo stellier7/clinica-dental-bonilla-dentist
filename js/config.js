@@ -371,8 +371,8 @@ const config = {
   // OPTIONAL — array of image URLs/paths. Shown under "Financing" in the Insurance section.
   // Tip: drop SVGs/PNGs in /assets/images/financing/ and reference them here.
   financingLogos: [
-    { name: "BAC Credomatic", src: "assets/images/financing/bac-credomatic.svg" },
-    { name: "Ficohsa", src: "assets/images/financing/ficohsa.svg" },
+    { name: "BAC Credomatic", src: "assets/images/insurance/Bac.png" },
+    { name: "Ficohsa", src: "assets/images/insurance/Ficohsa.png" },
   ],
 
   // ---------------------------------------------------------------------------
