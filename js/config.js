@@ -123,7 +123,8 @@ const config = {
         testimonials: "What Patients Say",
         testimonialsLead: "Trusted by families in our community.",
         insurance: "Insurance & Financing",
-        insuranceLead: "We work with major providers to keep care accessible.",
+        insuranceLead: "We work with major providers and financing partners to keep care accessible.",
+        financing: "Financing",
         location: "Visit Us",
         locationLead: "Conveniently located in Comayagua — we look forward to seeing you.",
       },
@@ -194,7 +195,8 @@ const config = {
         testimonials: "Lo Que Dicen Nuestros Pacientes",
         testimonialsLead: "La confianza de familias de nuestra comunidad.",
         insurance: "Seguros y Financiamiento",
-        insuranceLead: "Trabajamos con las principales aseguradoras.",
+        insuranceLead: "Trabajamos con aseguradoras y opciones de financiamiento para hacer el cuidado accesible.",
+        financing: "Financiamiento",
         location: "Visítanos",
         locationLead: "Ubicación conveniente en Comayagua — te esperamos con gusto.",
       },
@@ -362,6 +364,16 @@ const config = {
   // OPTIONAL — array of image URLs/paths. Empty array hides Insurance section.
   // Tip: drop SVGs/PNGs in /assets/images/insurance/ and reference them here.
   insuranceLogos: [],
+
+  // ---------------------------------------------------------------------------
+  // FINANCING LOGOS
+  // ---------------------------------------------------------------------------
+  // OPTIONAL — array of image URLs/paths. Shown under "Financing" in the Insurance section.
+  // Tip: drop SVGs/PNGs in /assets/images/financing/ and reference them here.
+  financingLogos: [
+    { name: "BAC Credomatic", src: "assets/images/insurance/Bac.png" },
+    { name: "Ficohsa", src: "assets/images/insurance/Ficohsa.png" },
+  ],
 
   // ---------------------------------------------------------------------------
   // SMILE GALLERY

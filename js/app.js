@@ -736,25 +736,21 @@
   }
 
   // -------------------------------------------------------------------------
-  // Insurance
+  // Insurance & Financing
   // -------------------------------------------------------------------------
-  function renderInsurance() {
-    const section = document.querySelector('[data-section="insurance"]');
-    const list = document.querySelector("[data-insurance-logos]");
-    if (!section || !list) return;
+  function renderLogoGrid(list, logos) {
+    if (!list) return false;
 
-    const logos = Array.isArray(cfg.insuranceLogos) ? cfg.insuranceLogos.filter(Boolean) : [];
-    if (!logos.length) {
-      section.hidden = true;
-      return;
+    const items = Array.isArray(logos) ? logos.filter(Boolean) : [];
+    if (!items.length) {
+      list.innerHTML = "";
+      return false;
     }
 
-    section.hidden = false;
-    list.innerHTML = logos
+    list.innerHTML = items
       .map((logo) => {
-        // Support string URLs or { name, src } objects
         const src = typeof logo === "string" ? logo : logo.src;
-        const name = typeof logo === "string" ? "Insurance" : logo.name || "Insurance";
+        const name = typeof logo === "string" ? "Partner" : logo.name || "Partner";
         if (!src) return "";
         return `
         <li>
@@ -762,6 +758,25 @@
         </li>`;
       })
       .join("");
+
+    return true;
+  }
+
+  function renderInsurance() {
+    const section = document.querySelector('[data-section="insurance"]');
+    const insuranceGroup = document.querySelector("[data-insurance-group]");
+    const financingGroup = document.querySelector("[data-financing-group]");
+    const insuranceList = document.querySelector("[data-insurance-logos]");
+    const financingList = document.querySelector("[data-financing-logos]");
+    if (!section) return;
+
+    const hasInsurance = renderLogoGrid(insuranceList, cfg.insuranceLogos);
+    const hasFinancing = renderLogoGrid(financingList, cfg.financingLogos);
+
+    if (insuranceGroup) insuranceGroup.hidden = !hasInsurance;
+    if (financingGroup) financingGroup.hidden = !hasFinancing;
+
+    section.hidden = !hasInsurance && !hasFinancing;
   }
 
   // -------------------------------------------------------------------------
@@ -900,7 +915,10 @@
       case "testimonials":
         return Array.isArray(cfg.testimonials) && cfg.testimonials.length > 0;
       case "insurance":
-        return Array.isArray(cfg.insuranceLogos) && cfg.insuranceLogos.length > 0;
+        return (
+          (Array.isArray(cfg.insuranceLogos) && cfg.insuranceLogos.length > 0) ||
+          (Array.isArray(cfg.financingLogos) && cfg.financingLogos.length > 0)
+        );
       case "location":
         return Boolean(cfg.practice.address?.street || cfg.practice.phone);
       default:
@@ -1211,14 +1229,13 @@
     });
   }
 
-  // INSURANCE - Simple fade for the entire grid
+  // INSURANCE & FINANCING - Simple fade for logo grids
   function setupInsuranceAnimations() {
-    const logoGrid = document.querySelector('.insurance__logos');
-    if (logoGrid) {
-      logoGrid.setAttribute('data-animate', 'fade');
-      logoGrid.setAttribute('data-anim-label', 'insurance-logos');
+    document.querySelectorAll(".insurance__logos").forEach((logoGrid, i) => {
+      logoGrid.setAttribute("data-animate", "fade");
+      logoGrid.setAttribute("data-anim-label", `insurance-logos-${i + 1}`);
       animationObserver.observe(logoGrid);
-    }
+    });
   }
 
   // LOCATION - Fade up

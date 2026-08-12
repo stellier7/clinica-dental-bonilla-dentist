@@ -1065,8 +1065,20 @@ body.nav-open {
 }
 
 /* ---------------------------------------------------------------------------
-   Insurance logos
+   Insurance & financing logos
    --------------------------------------------------------------------------- */
+.insurance__group + .insurance__group {
+  margin-top: 1.75rem;
+}
+
+.insurance__subtitle {
+  margin: 0 0 0.85rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-muted, #5a6b7a);
+  text-align: center;
+}
+
 .insurance__logos {
   list-style: none;
   margin: 0;
