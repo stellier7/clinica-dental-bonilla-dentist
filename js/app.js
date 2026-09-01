@@ -38,6 +38,7 @@
   initDentistsCarousel();
   initGalleryCarousel();
   initGalleryLightbox();
+  initDirectionsPicker();
   initVerticalScrollChaining();
   
   // Initialize animations after content renders
@@ -125,6 +126,7 @@
     renderStickyBar();
     applyStaticI18n();
     updateGalleryLightboxLabels();
+    updateDirectionsPickerLabels();
     refreshAnimations();
   }
 
@@ -198,10 +200,26 @@
     if (group) group.setAttribute("aria-label", t("langToggle.label"));
   }
 
+  function getInternationalPhoneDigits() {
+    const countryCode = String(cfg.practice.phoneCountryCode || "504").replace(/\D/g, "");
+    let digits = (cfg.practice.phoneTel || cfg.practice.phone || "").replace(/\D/g, "");
+    if (!digits) return "";
+
+    if (countryCode && digits.startsWith(countryCode)) {
+      return digits;
+    }
+
+    if (digits.startsWith("0")) {
+      digits = digits.replace(/^0+/, "");
+    }
+
+    return countryCode ? `${countryCode}${digits}` : digits;
+  }
+
   function whatsappHref(message = "") {
-    const digits = (cfg.practice.phoneTel || cfg.practice.phone || "").replace(/\D/g, "");
+    const digits = getInternationalPhoneDigits();
     if (!digits) return "#";
-    
+
     const baseUrl = `https://wa.me/${digits}`;
     if (message) {
       const encodedMessage = encodeURIComponent(message);
@@ -1161,7 +1179,169 @@
   // -------------------------------------------------------------------------
   // Location
   // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // Location
+  // -------------------------------------------------------------------------
+  function getPracticeAddressQuery() {
+    const addr = cfg.practice.address || {};
+    const fullAddress = [addr.street, addr.city, addr.state, addr.zip].filter(Boolean).join(", ");
+    const query = addr.mapsQuery || fullAddress;
+    return { fullAddress, query, encoded: encodeURIComponent(query) };
+  }
+
+  function getDirectionsApps() {
+    const { encoded } = getPracticeAddressQuery();
+    const addr = cfg.practice.address || {};
+    const lat = addr.lat;
+    const lng = addr.lng;
+    const hasCoords = lat != null && lng != null && `${lat}`.trim() !== "" && `${lng}`.trim() !== "";
+
+    return [
+      {
+        id: "google",
+        label: "Google Maps",
+        href: `https://www.google.com/maps/dir/?api=1&destination=${encoded}`,
+      },
+      {
+        id: "waze",
+        label: "Waze",
+        href: hasCoords
+          ? `https://www.waze.com/ul?ll=${encodeURIComponent(`${lat},${lng}`)}&navigate=yes`
+          : `https://www.waze.com/ul?q=${encoded}&navigate=yes`,
+      },
+      {
+        id: "apple",
+        label: "Apple Maps",
+        href: `https://maps.apple.com/?daddr=${encoded}`,
+      },
+    ];
+  }
+
+  let directionsPickerOpener = null;
+
+  function initDirectionsPicker() {
+    const picker = document.querySelector("[data-directions-picker]");
+    if (!picker || picker.dataset.bound === "true") return;
+
+    picker.dataset.bound = "true";
+
+    document.addEventListener("click", (event) => {
+      if (event.target.closest("[data-directions-open]")) {
+        event.preventDefault();
+        openDirectionsPicker(event.target.closest("[data-directions-open]"));
+        return;
+      }
+
+      if (event.target.closest("[data-directions-picker-close]")) {
+        event.preventDefault();
+        closeDirectionsPicker();
+        return;
+      }
+
+      if (event.target.closest("[data-directions-copy]")) {
+        event.preventDefault();
+        copyDirectionsAddress(event.target.closest("[data-directions-copy]"));
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      const pickerEl = document.querySelector("[data-directions-picker]");
+      if (!pickerEl || pickerEl.hidden) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeDirectionsPicker();
+      }
+    });
+
+    picker.addEventListener("click", (event) => {
+      if (event.target.closest("[data-directions-app]")) {
+        closeDirectionsPicker();
+      }
+    });
+
+    updateDirectionsPickerLabels();
+  }
+
+  function renderDirectionsPickerApps() {
+    const list = document.querySelector("[data-directions-apps]");
+    if (!list) return;
+
+    list.innerHTML = getDirectionsApps()
+      .map(
+        (app) => `
+      <li>
+        <a
+          class="directions-picker__app"
+          href="${escapeAttr(app.href)}"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-directions-app="${escapeAttr(app.id)}"
+        >${escapeHtml(app.label)}</a>
+      </li>`
+      )
+      .join("");
+  }
+
+  function openDirectionsPicker(opener) {
+    const picker = document.querySelector("[data-directions-picker]");
+    const { fullAddress } = getPracticeAddressQuery();
+    if (!picker || !fullAddress) return;
+
+    renderDirectionsPickerApps();
+    updateDirectionsPickerLabels();
+
+    directionsPickerOpener = opener ?? null;
+    picker.hidden = false;
+    document.body.classList.add("directions-picker-open");
+    picker.querySelector("[data-directions-picker-dialog]")?.focus();
+  }
+
+  function closeDirectionsPicker() {
+    const picker = document.querySelector("[data-directions-picker]");
+    if (!picker || picker.hidden) return;
+
+    picker.hidden = true;
+    document.body.classList.remove("directions-picker-open");
+    directionsPickerOpener?.focus?.();
+    directionsPickerOpener = null;
+  }
+
+  async function copyDirectionsAddress(button) {
+    const { fullAddress } = getPracticeAddressQuery();
+    if (!fullAddress || !button) return;
+
+    try {
+      await navigator.clipboard.writeText(fullAddress);
+      const original = button.textContent;
+      button.textContent = t("location.addressCopied");
+      window.setTimeout(() => {
+        button.textContent = original;
+      }, 1800);
+    } catch {
+      button.textContent = fullAddress;
+    }
+  }
+
+  function updateDirectionsPickerLabels() {
+    const picker = document.querySelector("[data-directions-picker]");
+    if (!picker) return;
+
+    picker
+      .querySelector("[data-directions-picker-dialog]")
+      ?.setAttribute("aria-label", t("location.chooseApp"));
+    picker.querySelectorAll("[data-directions-picker-close]").forEach((button) => {
+      if (button.classList.contains("directions-picker__close")) {
+        button.setAttribute("aria-label", t("location.cancel"));
+      }
+    });
+
+    const copyButton = picker.querySelector("[data-directions-copy]");
+    if (copyButton) copyButton.textContent = t("location.copyAddress");
+  }
+
   function renderLocation() {
+    closeDirectionsPicker();
+
     const section = document.querySelector('[data-section="location"]');
     const card = document.querySelector("[data-location-card]");
     if (!section || !card) return;
@@ -1174,9 +1354,8 @@
     }
 
     section.hidden = false;
-    const query = encodeURIComponent(addr.mapsQuery || fullAddress);
-    const mapsEmbed = `https://www.google.com/maps?q=${query}&output=embed`;
-    const mapsLink = `https://www.google.com/maps/dir/?api=1&destination=${query}`;
+    const { encoded } = getPracticeAddressQuery();
+    const mapsEmbed = `https://www.google.com/maps?q=${encoded}&output=embed`;
 
     const hoursRows = DAY_ORDER.map((day) => {
       const value = cfg.practice.hours?.[day];
@@ -1209,9 +1388,9 @@
         <ul class="location__hours">${hoursRows}</ul>
         <div class="location__actions">
           <a class="btn btn--primary" href="${whatsappHref(lang === 'es' ? 'Hola, tengo una pregunta' : 'Hello, I have a question')}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("location.call"))}</a>
-          <a class="btn btn--secondary" href="${escapeAttr(mapsLink)}" target="_blank" rel="noopener noreferrer">${escapeHtml(
+          <button type="button" class="btn btn--secondary" data-directions-open>${escapeHtml(
             t("location.directions")
-          )}</a>
+          )}</button>
         </div>
       </div>`;
 

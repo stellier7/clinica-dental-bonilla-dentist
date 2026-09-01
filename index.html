@@ -242,6 +242,35 @@
       <a class="sticky-bar__btn" data-book-cta href="tel:"></a>
     </aside>
 
+    <!-- Directions app picker -->
+    <div class="directions-picker" data-directions-picker hidden>
+      <button
+        type="button"
+        class="directions-picker__backdrop"
+        data-directions-picker-close
+        tabindex="-1"
+        aria-hidden="true"
+      ></button>
+      <div
+        class="directions-picker__panel"
+        role="dialog"
+        aria-modal="true"
+        tabindex="-1"
+        data-directions-picker-dialog
+      >
+        <div class="directions-picker__header">
+          <h2 class="directions-picker__title" data-i18n="location.chooseApp"></h2>
+          <button type="button" class="directions-picker__close" data-directions-picker-close>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <ul class="directions-picker__apps" data-directions-apps></ul>
+        <button type="button" class="directions-picker__copy" data-directions-copy></button>
+      </div>
+    </div>
+
     <!-- Gallery lightbox preview -->
     <div class="gallery-lightbox" data-gallery-lightbox hidden>
       <button

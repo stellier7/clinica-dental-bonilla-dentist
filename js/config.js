@@ -13,6 +13,7 @@ const config = {
     },
     phone: "+504 9887-5558",
     phoneTel: "50498875558",
+    phoneCountryCode: "504",
     address: {
       street: "Pasaje Andará - Flores, Primera planta, Barrio Torondón",
       city: "Comayagua",
@@ -62,6 +63,11 @@ const config = {
       services: { expand: "Learn more", collapse: "Show less" },
       location: {
         hours: "Hours", call: "Call Us", directions: "Get Directions", closed: "Closed",
+        chooseApp: "Open directions in",
+        cancel: "Cancel",
+        copyAddress: "Copy address",
+        addressCopied: "Address copied",
+        mapInteract: "Tap to interact with the map",
         days: { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" },
       },
       stickyBar: { cta: "Book Appointment" },
@@ -94,6 +100,11 @@ const config = {
       services: { expand: "Ver más", collapse: "Ver menos" },
       location: {
         hours: "Horario", call: "Llámanos", directions: "Cómo Llegar", closed: "Cerrado",
+        chooseApp: "Abrir direcciones en",
+        cancel: "Cancelar",
+        copyAddress: "Copiar dirección",
+        addressCopied: "Dirección copiada",
+        mapInteract: "Toca para interactuar con el mapa",
         days: { mon: "Lunes", tue: "Martes", wed: "Miércoles", thu: "Jueves", fri: "Viernes", sat: "Sábado", sun: "Domingo" },
       },
       stickyBar: { cta: "Agendar Cita" },
