@@ -256,12 +256,15 @@ async function runLiveSiteDentistsTest(page, viewport) {
     }
   }
 
-  const autoplayPlaying = await page.evaluate(() => {
-    const embla = document.querySelector("[data-dentists-viewport]")?._dentistsEmblaApi;
-    return embla?.plugins?.().autoplay?.isPlaying?.() ?? false;
-  });
-  if (autoplayPlaying) {
-    throw new Error(`Dentists carousel should not autoplay at ${viewport.width}px`);
+  const beforeAutoplayIndex = await page.evaluate(
+    () => document.querySelector("[data-dentists-viewport]")?._dentistsEmblaApi?.selectedScrollSnap() ?? -1
+  );
+  await page.waitForTimeout(5200);
+  const afterAutoplayIndex = await page.evaluate(
+    () => document.querySelector("[data-dentists-viewport]")?._dentistsEmblaApi?.selectedScrollSnap() ?? -1
+  );
+  if (beforeAutoplayIndex === afterAutoplayIndex) {
+    throw new Error(`Dentists autoplay did not advance at ${viewport.width}px`);
   }
 }
 

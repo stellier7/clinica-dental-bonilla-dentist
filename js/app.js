@@ -635,7 +635,6 @@
       slideSelector: ".dentist-card",
       label: "Dentists carousel",
       apiKey: "_dentistsEmblaApi",
-      enableAutoplay: false,
     });
   }
 
