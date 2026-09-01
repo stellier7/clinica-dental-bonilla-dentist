@@ -97,7 +97,7 @@ const config = {
         dentists: "Our Team",
         gallery: "Gallery",
         testimonials: "Reviews",
-        insurance: "Insurance",
+        financing: "Financing",
         location: "Location",
         book: "Book Appointment",
         openMenu: "Open menu",
@@ -125,6 +125,7 @@ const config = {
         insurance: "Insurance & Financing",
         insuranceLead: "We work with major providers and financing partners to keep care accessible.",
         financing: "Financing",
+        financingLead: "Flexible payment options to fit your budget.",
         location: "Visit Us",
         locationLead: "Conveniently located in Comayagua — we look forward to seeing you.",
       },
@@ -176,7 +177,7 @@ const config = {
         dentists: "Nuestro Equipo",
         gallery: "Galería",
         testimonials: "Opiniones",
-        insurance: "Seguros",
+        financing: "Financiamiento",
         location: "Ubicación",
         book: "Agendar Cita",
         openMenu: "Abrir menú",
@@ -204,6 +205,7 @@ const config = {
         insurance: "Seguros y Financiamiento",
         insuranceLead: "Trabajamos con aseguradoras y opciones de financiamiento para hacer el cuidado accesible.",
         financing: "Financiamiento",
+        financingLead: "Opciones de pago flexibles que se adaptan a tu presupuesto.",
         location: "Visítanos",
         locationLead: "Ubicación conveniente en Comayagua — te esperamos con gusto.",
       },
@@ -373,20 +375,24 @@ const config = {
   testimonials: [],
 
   // ---------------------------------------------------------------------------
-  // INSURANCE LOGOS
+  // FINANCING IMAGES
   // ---------------------------------------------------------------------------
-  // OPTIONAL — array of image URLs/paths. Empty array hides Insurance section.
-  // Tip: drop SVGs/PNGs in /assets/images/insurance/ and reference them here.
-  insuranceLogos: [],
-
-  // ---------------------------------------------------------------------------
-  // FINANCING LOGOS
-  // ---------------------------------------------------------------------------
-  // OPTIONAL — array of image URLs/paths. Shown under "Financing" in the Insurance section.
-  // Tip: drop SVGs/PNGs in /assets/images/financing/ and reference them here.
-  financingLogos: [
-    { name: "BAC Credomatic", src: "assets/images/insurance/Bac.png" },
-    { name: "Ficohsa", src: "assets/images/insurance/Ficohsa.png" },
+  // OPTIONAL — two images for the Financing section. Empty array hides the section.
+  financingImages: [
+    {
+      src: "assets/images/insurance/Bac.png",
+      alt: {
+        en: "BAC Credomatic financing",
+        es: "Financiamiento BAC Credomatic",
+      },
+    },
+    {
+      src: "assets/images/insurance/Ficohsa.png",
+      alt: {
+        en: "Ficohsa financing",
+        es: "Financiamiento Ficohsa",
+      },
+    },
   ],
 
   // ---------------------------------------------------------------------------

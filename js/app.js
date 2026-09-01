@@ -119,7 +119,7 @@
     renderDentists();
     renderGallery();
     renderTestimonials();
-    renderInsurance();
+    renderFinancing();
     renderLocation();
     renderFooter();
     renderStickyBar();
@@ -165,7 +165,7 @@
       { href: "#dentists", key: "nav.dentists", section: "dentists" },
       { href: "#gallery", key: "nav.gallery", section: "gallery" },
       { href: "#testimonials", key: "nav.testimonials", section: "testimonials" },
-      { href: "#insurance", key: "nav.insurance", section: "insurance" },
+      { href: "#financing", key: "nav.financing", section: "financing" },
       { href: "#location", key: "nav.location", section: "location" },
     ].filter((item) => isSectionVisible(item.section));
 
@@ -1136,47 +1136,34 @@
   }
 
   // -------------------------------------------------------------------------
-  // Insurance & Financing
+  // Financing
   // -------------------------------------------------------------------------
-  function renderLogoGrid(list, logos) {
-    if (!list) return false;
+  function renderFinancing() {
+    const section = document.querySelector('[data-section="financing"]');
+    const grid = document.querySelector("[data-financing-grid]");
+    if (!section || !grid) return;
 
-    const items = Array.isArray(logos) ? logos.filter(Boolean) : [];
-    if (!items.length) {
-      list.innerHTML = "";
-      return false;
+    const images = Array.isArray(cfg.financingImages) ? cfg.financingImages.filter(Boolean) : [];
+    if (!images.length) {
+      section.hidden = true;
+      return;
     }
 
-    list.innerHTML = items
-      .map((logo) => {
-        const src = typeof logo === "string" ? logo : logo.src;
-        const name = typeof logo === "string" ? "Partner" : logo.name || "Partner";
+    section.hidden = false;
+    grid.innerHTML = images
+      .map((image) => {
+        const src = typeof image === "string" ? image : image.src;
         if (!src) return "";
+        const alt =
+          typeof image === "string"
+            ? t("sections.financing")
+            : localized(image.alt) || t("sections.financing");
         return `
-        <li>
-          <img src="${escapeAttr(src)}" alt="${escapeAttr(name)}" loading="lazy" decoding="async" />
-        </li>`;
+        <figure class="financing__item">
+          <img src="${escapeAttr(src)}" alt="${escapeAttr(alt)}" loading="lazy" decoding="async" />
+        </figure>`;
       })
       .join("");
-
-    return true;
-  }
-
-  function renderInsurance() {
-    const section = document.querySelector('[data-section="insurance"]');
-    const insuranceGroup = document.querySelector("[data-insurance-group]");
-    const financingGroup = document.querySelector("[data-financing-group]");
-    const insuranceList = document.querySelector("[data-insurance-logos]");
-    const financingList = document.querySelector("[data-financing-logos]");
-    if (!section) return;
-
-    const hasInsurance = renderLogoGrid(insuranceList, cfg.insuranceLogos);
-    const hasFinancing = renderLogoGrid(financingList, cfg.financingLogos);
-
-    if (insuranceGroup) insuranceGroup.hidden = !hasInsurance;
-    if (financingGroup) financingGroup.hidden = !hasFinancing;
-
-    section.hidden = !hasInsurance && !hasFinancing;
   }
 
   // -------------------------------------------------------------------------
@@ -1325,11 +1312,8 @@
         return Array.isArray(cfg.gallery) && cfg.gallery.length > 0;
       case "testimonials":
         return Array.isArray(cfg.testimonials) && cfg.testimonials.length > 0;
-      case "insurance":
-        return (
-          (Array.isArray(cfg.insuranceLogos) && cfg.insuranceLogos.length > 0) ||
-          (Array.isArray(cfg.financingLogos) && cfg.financingLogos.length > 0)
-        );
+      case "financing":
+        return Array.isArray(cfg.financingImages) && cfg.financingImages.length > 0;
       case "location":
         return Boolean(cfg.practice.address?.street || cfg.practice.phone);
       default:
@@ -1691,7 +1675,7 @@
       dentists: 0.08,
       gallery: 0.11,
       testimonials: 0,
-      insurance: 0.07,
+      financing: 0.07,
       location: 0.08,
     };
 
@@ -1764,7 +1748,7 @@
     setupDentistsAnimations();
     setupGalleryAnimations();
     setupTestimonialsAnimations();
-    setupInsuranceAnimations();
+    setupFinancingAnimations();
     setupLocationAnimations();
     setupSectionHeaders();
     setupFooterAnimations();
@@ -1829,12 +1813,14 @@
     animationObserver.observe(wrap);
   }
 
-  // INSURANCE & FINANCING - Simple fade for logo grids
-  function setupInsuranceAnimations() {
-    document.querySelectorAll(".insurance__logos").forEach((logoGrid, i) => {
-      logoGrid.setAttribute("data-animate", "fade");
-      logoGrid.setAttribute("data-anim-label", `insurance-logos-${i + 1}`);
-      animationObserver.observe(logoGrid);
+  // FINANCING - Staggered scale fade per image
+  function setupFinancingAnimations() {
+    const items = document.querySelectorAll(".financing__item");
+    items.forEach((item, i) => {
+      item.setAttribute("data-animate", "fade-scale");
+      item.setAttribute("data-anim-label", `financing-image-${i + 1}`);
+      item.style.transitionDelay = `${i * 120}ms`;
+      animationObserver.observe(item);
     });
   }
 
@@ -1886,7 +1872,7 @@
     setupDentistsAnimations();
     setupGalleryAnimations();
     setupTestimonialsAnimations();
-    setupInsuranceAnimations();
+    setupFinancingAnimations();
     setupLocationAnimations();
     setupSectionHeaders();
     setupFooterAnimations();
