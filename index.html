@@ -138,7 +138,15 @@
             <h2 class="section__title" data-i18n="sections.dentists"></h2>
             <p class="section__lead" data-i18n="sections.dentistsLead"></p>
           </header>
-          <div class="dentists__grid" data-dentists-grid></div>
+        </div>
+        <div class="dentists__carousel" data-dentists-carousel>
+          <div
+            class="dentists__viewport"
+            data-dentists-viewport
+            tabindex="0"
+          >
+            <div class="dentists__track" data-dentists-grid></div>
+          </div>
         </div>
       </section>
 
@@ -153,8 +161,10 @@
           </header>
         </div>
         <div class="gallery__wrap">
-          <div class="gallery__scroller" data-gallery-scroller tabindex="0">
-            <!-- images injected -->
+          <div class="gallery__carousel" data-gallery-carousel>
+            <div class="gallery__viewport" data-gallery-viewport tabindex="0">
+              <div class="gallery__track" data-gallery-track></div>
+            </div>
           </div>
           <div class="gallery__nav" data-gallery-nav>
             <button class="gallery__arrow gallery__arrow--prev" data-gallery-prev aria-label="Previous image">
@@ -238,8 +248,46 @@
       <a class="sticky-bar__btn" data-book-cta href="tel:"></a>
     </aside>
 
+    <!-- Gallery lightbox preview -->
+    <div class="gallery-lightbox" data-gallery-lightbox hidden>
+      <button
+        type="button"
+        class="gallery-lightbox__backdrop"
+        data-gallery-lightbox-close
+        tabindex="-1"
+        aria-hidden="true"
+      ></button>
+      <div
+        class="gallery-lightbox__panel"
+        role="dialog"
+        aria-modal="true"
+        data-gallery-lightbox-dialog
+      >
+        <button type="button" class="gallery-lightbox__close" data-gallery-lightbox-close>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+        <button type="button" class="gallery-lightbox__nav gallery-lightbox__nav--prev" data-gallery-lightbox-prev>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+        <figure class="gallery-lightbox__figure">
+          <img class="gallery-lightbox__image" data-gallery-lightbox-image alt="" decoding="async" />
+        </figure>
+        <button type="button" class="gallery-lightbox__nav gallery-lightbox__nav--next" data-gallery-lightbox-next>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </button>
+        <p class="gallery-lightbox__counter" data-gallery-lightbox-counter aria-live="polite"></p>
+      </div>
+    </div>
+
     <!-- Config must load before app -->
     <script src="js/config.js"></script>
+    <script src="js/carousels-embla.bundle.js"></script>
     <script src="js/app.js"></script>
   </body>
 </html>

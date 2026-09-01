@@ -744,24 +744,59 @@ body.nav-open {
 /* ---------------------------------------------------------------------------
    Dentists
    --------------------------------------------------------------------------- */
-.dentists__grid {
+.dentists__carousel {
+  width: 100%;
+}
+
+.dentists__carousel--active {
+  --dentist-slide-size: 66cqw;
+  --dentist-slide-spacing: 0.625rem;
+}
+
+@media (min-width: 768px) {
+  .dentists__carousel--active {
+    --dentist-slide-size: 75cqw;
+    --dentist-slide-spacing: 0.75rem;
+  }
+}
+
+.dentists__viewport {
+  overflow: hidden;
+}
+
+.dentists__carousel--active .dentists__viewport {
+  container-type: inline-size;
+  overflow: hidden;
+}
+
+.dentists__track {
   display: grid;
   gap: 1.25rem;
 }
 
-/* When multiple dentists, enable horizontal scroll */
-.dentists__grid[data-scrollable="true"] {
+.dentists__carousel--active .dentists__track {
   display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  padding-bottom: 1rem;
+  gap: 0;
+  margin-left: calc(-1 * var(--dentist-slide-spacing));
+  touch-action: pan-y pinch-zoom;
 }
 
-.dentists__grid[data-scrollable="true"]::-webkit-scrollbar {
-  display: none;
+.dentists__carousel--active .dentist-card {
+  flex: 0 0 var(--dentist-slide-size);
+  min-width: 0;
+  margin-left: var(--dentist-slide-spacing);
+  opacity: 1;
+  transition: box-shadow 220ms ease;
+}
+
+.dentists__carousel--active .dentist-card[data-animate],
+.dentists__carousel--active .dentist-card[data-animate].in-view {
+  opacity: 1;
+  transition: box-shadow 220ms ease;
+}
+
+.dentists__carousel--active .dentist-card:hover {
+  transform: none;
 }
 
 .dentist-card {
@@ -775,13 +810,6 @@ body.nav-open {
   transition: box-shadow 220ms ease, transform 220ms var(--ease-out);
 }
 
-/* When scrollable, make cards full-width */
-.dentists__grid[data-scrollable="true"] .dentist-card {
-  flex: 0 0 100%;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-}
-
 .dentist-card__photo {
   aspect-ratio: 4 / 3;
   border-radius: var(--radius-md);
@@ -793,6 +821,22 @@ body.nav-open {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+@media (max-width: 767px) {
+  .dentist-card__photo {
+    aspect-ratio: 4 / 5;
+  }
+
+  .dentist-card__photo img {
+    object-fit: contain;
+    object-position: center top;
+  }
+
+  .gallery__item img {
+    object-fit: contain;
+    object-position: center;
+  }
 }
 
 .dentist-card__placeholder {
@@ -842,7 +886,7 @@ body.nav-open {
 }
 
 /* ---------------------------------------------------------------------------
-   Gallery — horizontal carousel with auto-scroll
+   Gallery — Embla loop carousel (portrait 4:5 frames)
    --------------------------------------------------------------------------- */
 .gallery .container {
   margin-bottom: 1.5rem;
@@ -853,41 +897,65 @@ body.nav-open {
   width: 100%;
 }
 
-.gallery__scroller {
-  display: flex;
-  gap: 1rem;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  padding: 0.5rem 1rem 1.25rem 1rem;
-  margin: 0 -1rem;
+.gallery__carousel {
+  width: 100%;
 }
 
-.gallery__scroller::-webkit-scrollbar {
-  display: none;
+.gallery__carousel--active {
+  --gallery-slide-size: 66cqw;
+  --gallery-slide-spacing: 0.5rem;
+}
+
+.gallery__viewport {
+  overflow: hidden;
+}
+
+.gallery__carousel--active .gallery__viewport {
+  container-type: inline-size;
+  overflow: hidden;
+  padding: 0.5rem 0 1.25rem;
+}
+
+.gallery__track {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.gallery__carousel--active .gallery__track {
+  gap: 0;
+  margin-left: calc(-1 * var(--gallery-slide-spacing));
+  touch-action: pan-y pinch-zoom;
 }
 
 .gallery__item {
-  flex: 0 0 85%;
-  max-width: 420px;
-  aspect-ratio: 4 / 3;
+  margin: 0;
+  aspect-ratio: 4 / 5;
   border-radius: var(--radius-md);
   overflow: hidden;
   background: var(--color-gallery-placeholder);
   box-shadow: var(--shadow-md);
-  scroll-snap-align: center;
-  scroll-snap-stop: always;
-  transition: transform 280ms var(--ease-out), box-shadow 280ms ease;
   cursor: pointer;
+}
+
+.gallery__carousel--active .gallery__item {
+  flex: 0 0 var(--gallery-slide-size);
+  min-width: 0;
+  margin: 0 0 0 var(--gallery-slide-spacing);
+  opacity: 1;
+  transition: box-shadow 280ms ease;
+}
+
+.gallery__carousel--active .gallery__item[data-animate],
+.gallery__carousel--active .gallery__item[data-animate].in-view {
+  opacity: 1;
+  transition: box-shadow 280ms ease;
 }
 
 .gallery__item img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center 20%;
   display: block;
 }
 
@@ -896,24 +964,22 @@ body.nav-open {
   display: none;
 }
 
+.gallery__nav[hidden] {
+  display: none !important;
+}
+
 @media (min-width: 768px) {
-  .gallery__scroller {
-    gap: 1.25rem;
-    padding: 0.5rem max(2rem, calc((100vw - var(--container)) / 2)) 1.25rem;
-    margin: 0 calc(-1 * max(2rem, calc((100vw - var(--container)) / 2)));
-  }
-  
-  .gallery__item {
-    flex: 0 0 340px;
-    scroll-snap-align: start;
+  .gallery__carousel--active {
+    --gallery-slide-size: min(360px, 75cqw);
+    --gallery-slide-spacing: 0.625rem;
   }
 
-  .gallery__item:hover {
-    transform: translateY(-4px);
+  .gallery__carousel--active .gallery__item:hover {
+    transform: none;
     box-shadow: var(--shadow-lg);
   }
 
-  .gallery__nav {
+  .gallery__wrap:has(.gallery__carousel--active) .gallery__nav {
     display: flex;
     justify-content: center;
     gap: 0.75rem;
@@ -951,6 +1017,200 @@ body.nav-open {
   }
 }
 
+.gallery__carousel--active .gallery__item:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring), var(--shadow-md);
+}
+
+/* Gallery lightbox preview */
+.gallery-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.gallery-lightbox[hidden] {
+  display: none !important;
+}
+
+body.gallery-lightbox-open {
+  overflow: hidden;
+}
+
+.gallery-lightbox__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(16, 36, 52, 0.88);
+  cursor: pointer;
+}
+
+.gallery-lightbox__panel {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: 1fr auto;
+  align-items: center;
+  gap: 0.75rem 0.5rem;
+  width: min(100%, 980px);
+  max-height: min(92vh, 900px);
+  pointer-events: none;
+}
+
+.gallery-lightbox__figure,
+.gallery-lightbox__close,
+.gallery-lightbox__nav,
+.gallery-lightbox__counter {
+  pointer-events: auto;
+}
+
+.gallery-lightbox__close {
+  position: absolute;
+  top: -0.25rem;
+  right: -0.25rem;
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--color-white);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 180ms ease, transform 180ms var(--ease-out);
+}
+
+.gallery-lightbox__close:hover {
+  background: rgba(255, 255, 255, 0.24);
+  transform: scale(1.05);
+}
+
+.gallery-lightbox__close:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.gallery-lightbox__close svg {
+  width: 22px;
+  height: 22px;
+}
+
+.gallery-lightbox__nav {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--color-white);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 180ms ease, transform 180ms var(--ease-out);
+  flex-shrink: 0;
+}
+
+.gallery-lightbox__nav:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: scale(1.06);
+}
+
+.gallery-lightbox__nav:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.gallery-lightbox__nav svg {
+  width: 22px;
+  height: 22px;
+}
+
+.gallery-lightbox__nav[hidden] {
+  display: none;
+}
+
+.gallery-lightbox__figure {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
+  width: 100%;
+  max-height: min(78vh, 760px);
+  display: grid;
+  place-items: center;
+}
+
+.gallery-lightbox__image {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: min(78vh, 760px);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  object-fit: contain;
+  background: var(--color-gallery-placeholder);
+}
+
+.gallery-lightbox__counter {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin: 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 767px) {
+  .gallery-lightbox__panel {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto auto;
+    gap: 0.75rem;
+    max-height: 100%;
+  }
+
+  .gallery-lightbox__figure {
+    grid-column: 1;
+    grid-row: 2;
+    max-height: min(68vh, 620px);
+  }
+
+  .gallery-lightbox__image {
+    max-height: min(68vh, 620px);
+  }
+
+  .gallery-lightbox__nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .gallery-lightbox__nav:hover {
+    transform: translateY(-50%) scale(1.06);
+  }
+
+  .gallery-lightbox__nav--prev {
+    left: 0.25rem;
+  }
+
+  .gallery-lightbox__nav--next {
+    right: 0.25rem;
+  }
+
+  .gallery-lightbox__counter {
+    grid-row: 3;
+  }
+
+  .gallery-lightbox__close {
+    top: 0;
+    right: 0;
+  }
+}
 /* ---------------------------------------------------------------------------
    Testimonials
    --------------------------------------------------------------------------- */

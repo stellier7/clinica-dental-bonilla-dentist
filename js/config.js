@@ -161,6 +161,13 @@ const config = {
         en: "EN",
         es: "ES",
       },
+      gallery: {
+        viewImage: "View image",
+        close: "Close preview",
+        previous: "Previous image",
+        next: "Next image",
+        preview: "Image preview",
+      },
     },
     es: {
       nav: {
@@ -232,6 +239,13 @@ const config = {
         label: "Idioma",
         en: "EN",
         es: "ES",
+      },
+      gallery: {
+        viewImage: "Ver imagen",
+        close: "Cerrar vista previa",
+        previous: "Imagen anterior",
+        next: "Imagen siguiente",
+        preview: "Vista previa de imagen",
       },
     },
   },

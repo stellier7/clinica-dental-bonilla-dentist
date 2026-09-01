@@ -36,6 +36,9 @@
   initHeaderScroll();
   initTestimonialsCarousel();
   initDentistsCarousel();
+  initGalleryCarousel();
+  initGalleryLightbox();
+  initVerticalScrollChaining();
   
   // Initialize animations after content renders
   setTimeout(() => {
@@ -121,6 +124,7 @@
     renderFooter();
     renderStickyBar();
     applyStaticI18n();
+    updateGalleryLightboxLabels();
     refreshAnimations();
   }
 
@@ -404,10 +408,155 @@
   // -------------------------------------------------------------------------
   // Dentists
   // -------------------------------------------------------------------------
+  /**
+   * Build carousel slide order for Embla loop + neighbor peeks.
+   * - 1 item: static (no carousel)
+   * - 2 items: sandwich six slides [B, A, B, A, B, A], start on A (first in config)
+   * - 3–4 items: repeat roster to 6 slides, start on A
+   * - 5+ items: one slide per item (5 slides loops reliably at gallery width)
+   */
+  function buildLoopCarouselTrack(items) {
+    if (items.length <= 1) {
+      return { trackItems: items, carouselStartIndex: 0 };
+    }
+
+    if (items.length === 2) {
+      return {
+        trackItems: Array.from({ length: 6 }, (_, index) => items[(index + 1) % 2]),
+        carouselStartIndex: 1,
+      };
+    }
+
+    if (items.length >= 3 && items.length <= 4) {
+      return {
+        trackItems: Array.from({ length: 6 }, (_, index) => items[index % items.length]),
+        carouselStartIndex: 0,
+      };
+    }
+
+    return { trackItems: items, carouselStartIndex: 0 };
+  }
+
+  function buildDentistsCarouselTrack(dentists) {
+    const { trackItems, carouselStartIndex } = buildLoopCarouselTrack(dentists);
+    return { trackDentists: trackItems, carouselStartIndex };
+  }
+
+  function buildGalleryCarouselTrack(images) {
+    const { trackItems, carouselStartIndex } = buildLoopCarouselTrack(images);
+    return { trackImages: trackItems, carouselStartIndex };
+  }
+
+  function initLoopEmblaSection({
+    viewport,
+    section,
+    startIndex,
+    delay,
+    slideSelector,
+    label,
+    apiKey,
+    enableAutoplay = true,
+    nav,
+  }) {
+    if (!window.CarouselsEmbla?.initLoopCarousel) {
+      console.error("CarouselsEmbla bundle missing — run npm run build:carousels-embla");
+      return null;
+    }
+
+    const { embla, autoplay, loopActive } = window.CarouselsEmbla.initLoopCarousel(viewport, {
+      delay,
+      reducedMotion: prefersReducedMotion.matches,
+      startIndex,
+      slideSelector,
+      label,
+      enableAutoplay,
+    });
+
+    viewport.dataset.emblaLoop = loopActive ? "true" : "false";
+
+    const refreshLoop = () => {
+      if (!embla.internalEngine().options.loop) return;
+      embla.internalEngine().slideLooper.loop();
+    };
+
+    const settleToStart = () => {
+      refreshLoop();
+      embla.scrollTo(startIndex, true);
+    };
+
+    embla.on("init", settleToStart);
+    embla.on("reInit", settleToStart);
+    embla.on("scroll", refreshLoop);
+    embla.on("settle", refreshLoop);
+    requestAnimationFrame(settleToStart);
+
+    if (document.readyState === "complete") {
+      requestAnimationFrame(settleToStart);
+    } else {
+      window.addEventListener("load", () => requestAnimationFrame(settleToStart), { once: true });
+    }
+
+    viewport[apiKey] = embla;
+
+    if (!enableAutoplay || !autoplay) {
+      if (nav?.prevBtn && nav?.nextBtn) {
+        nav.prevBtn.addEventListener("click", () => embla.scrollPrev());
+        nav.nextBtn.addEventListener("click", () => embla.scrollNext());
+      }
+      window.addEventListener("resize", () => embla.reInit(), { passive: true });
+      return embla;
+    }
+
+    let sectionVisible = false;
+
+    const resumeAutoplay = () => {
+      if (!sectionVisible || !autoplay || prefersReducedMotion.matches) return;
+      autoplay.play();
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          sectionVisible = entry.isIntersecting;
+          if (sectionVisible) {
+            resumeAutoplay();
+          } else {
+            autoplay?.stop();
+          }
+        });
+      },
+      { threshold: 0.2, rootMargin: "0px 0px -10% 0px" }
+    );
+
+    observer.observe(section);
+
+    embla.on("pointerUp", resumeAutoplay);
+    embla.on("reInit", resumeAutoplay);
+    viewport.addEventListener("touchend", resumeAutoplay, { passive: true });
+    viewport.addEventListener("touchcancel", resumeAutoplay, { passive: true });
+
+    if (nav?.prevBtn && nav?.nextBtn) {
+      nav.prevBtn.addEventListener("click", () => {
+        embla.scrollPrev();
+        resumeAutoplay();
+      });
+      nav.nextBtn.addEventListener("click", () => {
+        embla.scrollNext();
+        resumeAutoplay();
+      });
+    }
+
+    window.addEventListener("resize", () => embla.reInit(), { passive: true });
+
+    return embla;
+  }
+
   function renderDentists() {
     const section = document.querySelector('[data-section="dentists"]');
-    const grid = document.querySelector("[data-dentists-grid]");
-    if (!section || !grid) return;
+    const carousel = document.querySelector("[data-dentists-carousel]");
+    const viewport = document.querySelector("[data-dentists-viewport]");
+    const track = document.querySelector("[data-dentists-grid]");
+    if (!section || !carousel || !viewport || !track) return;
 
     const dentists = Array.isArray(cfg.dentists) ? cfg.dentists : [];
     if (!dentists.length) {
@@ -416,15 +565,20 @@
     }
 
     section.hidden = false;
-    
-    // Enable horizontal scroll for multiple dentists
-    if (dentists.length > 1) {
-      grid.setAttribute('data-scrollable', 'true');
-    } else {
-      grid.removeAttribute('data-scrollable');
-    }
-    
-    grid.innerHTML = dentists
+
+    const isCarousel = dentists.length > 1;
+    carousel.classList.toggle("dentists__carousel--active", isCarousel);
+    viewport.toggleAttribute("data-embla", isCarousel);
+    viewport.removeAttribute("data-vertical-scroll-chain");
+
+    // Build track order for Embla loop + neighbor peeks (see buildDentistsCarouselTrack).
+    const { trackDentists, carouselStartIndex } = isCarousel
+      ? buildDentistsCarouselTrack(dentists)
+      : { trackDentists: dentists, carouselStartIndex: 0 };
+
+    viewport.dataset.carouselStartIndex = String(carouselStartIndex);
+
+    track.innerHTML = trackDentists
       .map((d) => {
         const initials = (d.name || "")
           .split(/\s+/)
@@ -452,94 +606,41 @@
   }
 
   // -------------------------------------------------------------------------
-  // Dentists Carousel (for multiple dentists)
+  // Dentists Carousel (Embla — loop + autoplay)
   // -------------------------------------------------------------------------
   function initDentistsCarousel() {
-    const grid = document.querySelector("[data-dentists-grid]");
-    if (!grid || grid.getAttribute('data-scrollable') !== 'true') return;
-    
-    const cards = grid.querySelectorAll('.dentist-card');
-    if (cards.length <= 1) return;
-    
-    let autoScrollInterval = null;
-    let isPaused = false;
-    let currentIndex = 0;
-    
-    function scrollToCard(index) {
-      const card = cards[index];
-      if (!card) return;
-      
-      grid.scrollTo({
-        left: card.offsetLeft,
-        behavior: 'smooth'
-      });
-    }
-    
-    function startAutoScroll() {
-      if (isPaused || autoScrollInterval) return;
-      
-      autoScrollInterval = setInterval(() => {
-        if (isPaused) return;
-        
-        currentIndex = (currentIndex + 1) % cards.length;
-        scrollToCard(currentIndex);
-      }, 5000); // Scroll every 5 seconds (longer for bio reading)
-    }
-    
-    function pauseAutoScroll() {
-      isPaused = true;
-      if (autoScrollInterval) {
-        clearInterval(autoScrollInterval);
-        autoScrollInterval = null;
-      }
-    }
-    
-    function resumeAutoScroll() {
-      isPaused = false;
-      startAutoScroll();
-    }
-    
-    // Pause on hover/touch
-    grid.addEventListener('mouseenter', pauseAutoScroll);
-    grid.addEventListener('mouseleave', resumeAutoScroll);
-    grid.addEventListener('touchstart', pauseAutoScroll, { passive: true });
-    
-    // Pause when user manually scrolls
-    let scrollTimeout;
-    grid.addEventListener('scroll', () => {
-      pauseAutoScroll();
-      clearTimeout(scrollTimeout);
-      
-      // Update current index based on scroll position
-      scrollTimeout = setTimeout(() => {
-        const scrollLeft = grid.scrollLeft;
-        let closestIndex = 0;
-        let closestDist = Infinity;
-        
-        cards.forEach((card, i) => {
-          const dist = Math.abs(card.offsetLeft - scrollLeft);
-          if (dist < closestDist) {
-            closestDist = dist;
-            closestIndex = i;
-          }
-        });
-        
-        currentIndex = closestIndex;
-        resumeAutoScroll();
-      }, 7000); // Resume after 7 seconds (extra time for reading bios)
-    }, { passive: true });
-    
-    // Start auto-scrolling
-    startAutoScroll();
+    const viewport = document.querySelector("[data-dentists-viewport]");
+    if (!viewport || !viewport.hasAttribute("data-embla")) return;
+
+    const section = document.querySelector('[data-section="dentists"]');
+    if (!section) return;
+
+    const startIndex = Number(viewport.dataset.carouselStartIndex || "0");
+
+    initLoopEmblaSection({
+      viewport,
+      section,
+      startIndex,
+      delay: 5000,
+      slideSelector: ".dentist-card",
+      label: "Dentists carousel",
+      apiKey: "_dentistsEmblaApi",
+      enableAutoplay: false,
+    });
   }
 
   // -------------------------------------------------------------------------
   // Gallery
   // -------------------------------------------------------------------------
   function renderGallery() {
+    closeGalleryLightbox();
+
     const section = document.querySelector('[data-section="gallery"]');
-    const scroller = document.querySelector("[data-gallery-scroller]");
-    if (!section || !scroller) return;
+    const carousel = document.querySelector("[data-gallery-carousel]");
+    const viewport = document.querySelector("[data-gallery-viewport]");
+    const track = document.querySelector("[data-gallery-track]");
+    const nav = document.querySelector("[data-gallery-nav]");
+    if (!section || !carousel || !viewport || !track) return;
 
     const images = Array.isArray(cfg.gallery) ? cfg.gallery.filter(Boolean) : [];
     if (!images.length) {
@@ -548,16 +649,247 @@
     }
 
     section.hidden = false;
-    scroller.innerHTML = images
-      .map(
-        (src, i) => `
-      <figure class="gallery__item">
+
+    const isCarousel = images.length > 1;
+    carousel.classList.toggle("gallery__carousel--active", isCarousel);
+    viewport.toggleAttribute("data-embla", isCarousel);
+    viewport.removeAttribute("data-vertical-scroll-chain");
+    if (nav) nav.hidden = !isCarousel;
+
+    const { trackImages, carouselStartIndex } = isCarousel
+      ? buildGalleryCarouselTrack(images)
+      : { trackImages: images, carouselStartIndex: 0 };
+
+    viewport.dataset.carouselStartIndex = String(carouselStartIndex);
+
+    const imageIndexBySrc = new Map(images.map((src, index) => [src, index]));
+
+    track.innerHTML = trackImages
+      .map((src) => {
+        const imageIndex = imageIndexBySrc.get(src) ?? 0;
+        const viewLabel = t("gallery.viewImage");
+        return `
+      <figure
+        class="gallery__item"
+        data-gallery-index="${imageIndex}"
+        role="button"
+        tabindex="0"
+        aria-label="${escapeAttr(`${viewLabel} ${imageIndex + 1}`)}"
+      >
         <img src="${escapeAttr(src)}" alt="${escapeAttr(
-          `${cfg.practice.name} — ${i + 1}`
+          `${cfg.practice.name} — ${imageIndex + 1}`
         )}" loading="lazy" decoding="async" />
-      </figure>`
-      )
+      </figure>`;
+      })
       .join("");
+  }
+
+  let galleryLightboxIndex = 0;
+  let galleryLightboxOpener = null;
+  let galleryLightboxImages = [];
+  let galleryPress = null;
+
+  function getGalleryImages() {
+    return Array.isArray(cfg.gallery) ? cfg.gallery.filter(Boolean) : [];
+  }
+
+  function initGalleryLightbox() {
+    const lightbox = document.querySelector("[data-gallery-lightbox]");
+    const carousel = document.querySelector("[data-gallery-carousel]");
+    if (!lightbox || !carousel || lightbox.dataset.bound === "true") return;
+
+    lightbox.dataset.bound = "true";
+
+    carousel.addEventListener("pointerdown", (event) => {
+      const item = event.target.closest(".gallery__item");
+      if (!item || !carousel.contains(item)) return;
+
+      galleryPress = {
+        x: event.clientX,
+        y: event.clientY,
+        item,
+        pointerId: event.pointerId,
+      };
+    });
+
+    carousel.addEventListener("pointerup", (event) => {
+      if (!galleryPress || event.pointerId !== galleryPress.pointerId) return;
+
+      const { x, y, item } = galleryPress;
+      galleryPress = null;
+
+      const dx = Math.abs(event.clientX - x);
+      const dy = Math.abs(event.clientY - y);
+      if (dx > 12 || dy > 12) return;
+
+      const index = Number(item.dataset.galleryIndex);
+      if (Number.isNaN(index)) return;
+
+      openGalleryLightbox(index, item);
+    });
+
+    carousel.addEventListener("pointercancel", () => {
+      galleryPress = null;
+    });
+
+    carousel.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+
+      const item = event.target.closest(".gallery__item");
+      if (!item || !carousel.contains(item)) return;
+
+      event.preventDefault();
+      const index = Number(item.dataset.galleryIndex);
+      if (Number.isNaN(index)) return;
+
+      openGalleryLightbox(index, item);
+    });
+
+    lightbox.querySelectorAll("[data-gallery-lightbox-close]").forEach((button) => {
+      button.addEventListener("click", closeGalleryLightbox);
+    });
+
+    lightbox
+      .querySelector("[data-gallery-lightbox-prev]")
+      ?.addEventListener("click", () => stepGalleryLightbox(-1));
+    lightbox
+      .querySelector("[data-gallery-lightbox-next]")
+      ?.addEventListener("click", () => stepGalleryLightbox(1));
+
+    document.addEventListener("keydown", onGalleryLightboxKeydown);
+    updateGalleryLightboxLabels();
+  }
+
+  function openGalleryLightbox(index, opener) {
+    galleryLightboxImages = getGalleryImages();
+    if (!galleryLightboxImages.length) return;
+
+    galleryLightboxIndex = Math.max(0, Math.min(index, galleryLightboxImages.length - 1));
+    galleryLightboxOpener = opener ?? null;
+
+    const lightbox = document.querySelector("[data-gallery-lightbox]");
+    if (!lightbox) return;
+
+    updateGalleryLightboxSlide();
+    updateGalleryLightboxLabels();
+
+    lightbox.hidden = false;
+    document.body.classList.add("gallery-lightbox-open");
+
+    document.querySelector("[data-gallery-viewport]")?._galleryEmblaApi?.plugins?.()?.autoplay?.stop();
+
+    lightbox.querySelector(".gallery-lightbox__close")?.focus();
+  }
+
+  function closeGalleryLightbox() {
+    const lightbox = document.querySelector("[data-gallery-lightbox]");
+    if (!lightbox || lightbox.hidden) return;
+
+    lightbox.hidden = true;
+    document.body.classList.remove("gallery-lightbox-open");
+
+    galleryLightboxOpener?.focus?.();
+    galleryLightboxOpener = null;
+
+    if (!prefersReducedMotion.matches) {
+      document.querySelector("[data-gallery-viewport]")?._galleryEmblaApi?.plugins?.()?.autoplay?.play();
+    }
+  }
+
+  function stepGalleryLightbox(delta) {
+    const total = galleryLightboxImages.length;
+    if (total <= 1) return;
+
+    galleryLightboxIndex = (galleryLightboxIndex + delta + total) % total;
+    updateGalleryLightboxSlide();
+  }
+
+  function updateGalleryLightboxSlide() {
+    const lightbox = document.querySelector("[data-gallery-lightbox]");
+    if (!lightbox) return;
+
+    const image = lightbox.querySelector("[data-gallery-lightbox-image]");
+    const counter = lightbox.querySelector("[data-gallery-lightbox-counter]");
+    const prevBtn = lightbox.querySelector("[data-gallery-lightbox-prev]");
+    const nextBtn = lightbox.querySelector("[data-gallery-lightbox-next]");
+    const src = galleryLightboxImages[galleryLightboxIndex];
+    const total = galleryLightboxImages.length;
+
+    if (image && src) {
+      image.src = src;
+      image.alt = `${cfg.practice.name} — ${galleryLightboxIndex + 1}`;
+    }
+
+    if (counter) {
+      counter.textContent = total > 1 ? `${galleryLightboxIndex + 1} / ${total}` : "";
+    }
+
+    const showNav = total > 1;
+    if (prevBtn) prevBtn.hidden = !showNav;
+    if (nextBtn) nextBtn.hidden = !showNav;
+  }
+
+  function updateGalleryLightboxLabels() {
+    const lightbox = document.querySelector("[data-gallery-lightbox]");
+    if (!lightbox) return;
+
+    lightbox
+      .querySelector("[data-gallery-lightbox-dialog]")
+      ?.setAttribute("aria-label", t("gallery.preview"));
+    lightbox
+      .querySelector(".gallery-lightbox__close")
+      ?.setAttribute("aria-label", t("gallery.close"));
+    lightbox
+      .querySelector("[data-gallery-lightbox-prev]")
+      ?.setAttribute("aria-label", t("gallery.previous"));
+    lightbox
+      .querySelector("[data-gallery-lightbox-next]")
+      ?.setAttribute("aria-label", t("gallery.next"));
+  }
+
+  function onGalleryLightboxKeydown(event) {
+    const lightbox = document.querySelector("[data-gallery-lightbox]");
+    if (!lightbox || lightbox.hidden) return;
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeGalleryLightbox();
+      return;
+    }
+
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      stepGalleryLightbox(-1);
+      return;
+    }
+
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      stepGalleryLightbox(1);
+    }
+  }
+
+  function initGalleryCarousel() {
+    const viewport = document.querySelector("[data-gallery-viewport]");
+    if (!viewport || !viewport.hasAttribute("data-embla")) return;
+
+    const section = document.querySelector('[data-section="gallery"]');
+    if (!section) return;
+
+    const startIndex = Number(viewport.dataset.carouselStartIndex || "0");
+    const prevBtn = document.querySelector("[data-gallery-prev]");
+    const nextBtn = document.querySelector("[data-gallery-next]");
+
+    initLoopEmblaSection({
+      viewport,
+      section,
+      startIndex,
+      delay: 3000,
+      slideSelector: ".gallery__item",
+      label: "Gallery carousel",
+      apiKey: "_galleryEmblaApi",
+      nav: prevBtn && nextBtn ? { prevBtn, nextBtn } : null,
+    });
   }
 
   // -------------------------------------------------------------------------
@@ -605,8 +937,9 @@
         const index = Number(btn.getAttribute("data-dot-index"));
         const card = track.children[index];
         if (card) {
+          const left = card.offsetLeft - (track.clientWidth - card.offsetWidth) / 2;
           track.scrollTo({
-            left: card.offsetLeft,
+            left: Math.max(0, left),
             behavior: prefersReducedMotion.matches ? "auto" : "smooth",
           });
         }
@@ -617,9 +950,37 @@
   function initTestimonialsCarousel() {
     const track = document.querySelector("[data-testimonials-track]");
     const dots = document.querySelector("[data-testimonials-dots]");
+    const section = document.querySelector('[data-section="testimonials"]');
     if (!track || !dots) return;
 
-    // Keep dots in sync while swiping
+    const getActiveIndex = () => {
+      const cards = Array.from(track.children);
+      if (!cards.length) return 0;
+
+      const center = track.scrollLeft + track.clientWidth / 2;
+      let active = 0;
+      let best = Infinity;
+
+      cards.forEach((card, i) => {
+        const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+        const dist = Math.abs(cardCenter - center);
+        if (dist < best) {
+          best = dist;
+          active = i;
+        }
+      });
+
+      return active;
+    };
+
+    const syncDots = () => {
+      const active = getActiveIndex();
+      dots.querySelectorAll(".testimonials__dot").forEach((dot, i) => {
+        if (i === active) dot.setAttribute("aria-current", "true");
+        else dot.removeAttribute("aria-current");
+      });
+    };
+
     let ticking = false;
     track.addEventListener(
       "scroll",
@@ -627,112 +988,151 @@
         if (ticking) return;
         ticking = true;
         requestAnimationFrame(() => {
-          const cards = Array.from(track.children);
-          if (!cards.length) {
-            ticking = false;
-            return;
-          }
-          const scrollLeft = track.scrollLeft;
-          let active = 0;
-          let best = Infinity;
-          cards.forEach((card, i) => {
-            const dist = Math.abs(card.offsetLeft - scrollLeft);
-            if (dist < best) {
-              best = dist;
-              active = i;
-            }
-          });
-          dots.querySelectorAll(".testimonials__dot").forEach((dot, i) => {
-            if (i === active) dot.setAttribute("aria-current", "true");
-            else dot.removeAttribute("aria-current");
-          });
+          syncDots();
           ticking = false;
         });
       },
       { passive: true }
     );
-    
-    // Auto-scroll testimonials
-    initTestimonialsAutoScroll(track);
+
+    initTestimonialsAutoScroll(track, section, getActiveIndex, syncDots);
   }
 
   // -------------------------------------------------------------------------
   // TESTIMONIALS AUTO-SCROLL
   // -------------------------------------------------------------------------
-  function initTestimonialsAutoScroll(track) {
+  function initTestimonialsAutoScroll(track, section, getActiveIndex, syncDots) {
     if (!track || prefersReducedMotion.matches) return;
-    
-    const cards = track.querySelectorAll('.testimonial-card');
-    if (cards.length === 0) return;
-    
-    let autoScrollInterval;
+
+    const cards = track.querySelectorAll(".testimonial-card");
+    if (cards.length <= 1) return;
+
+    let autoScrollInterval = null;
+    let resumeTimeout = null;
     let isPaused = false;
+    let isAutoScrolling = false;
     let currentIndex = 0;
-    
-    function scrollToCard(index) {
+    let sectionVisible = false;
+
+    function scrollToCard(index, behavior = "smooth") {
       const card = cards[index];
       if (!card) return;
-      
+
+      isAutoScrolling = true;
+      const left = card.offsetLeft - (track.clientWidth - card.offsetWidth) / 2;
       track.scrollTo({
-        left: card.offsetLeft,
-        behavior: 'smooth'
+        left: Math.max(0, left),
+        behavior: prefersReducedMotion.matches ? "auto" : behavior,
       });
+
+      window.setTimeout(() => {
+        isAutoScrolling = false;
+      }, prefersReducedMotion.matches ? 0 : 650);
     }
-    
-    function startAutoScroll() {
-      if (isPaused) return;
-      
-      autoScrollInterval = setInterval(() => {
-        if (isPaused) return;
-        
-        currentIndex = (currentIndex + 1) % cards.length;
-        scrollToCard(currentIndex);
-      }, 3500); // Scroll every 3.5 seconds
-    }
-    
-    function pauseAutoScroll() {
-      isPaused = true;
+
+    function stopAutoScroll() {
       if (autoScrollInterval) {
         clearInterval(autoScrollInterval);
+        autoScrollInterval = null;
       }
     }
-    
-    function resumeAutoScroll() {
+
+    function startAutoScroll() {
+      if (isPaused || !sectionVisible || autoScrollInterval) return;
+
+      autoScrollInterval = setInterval(() => {
+        if (isPaused || !sectionVisible) return;
+        currentIndex = (currentIndex + 1) % cards.length;
+        scrollToCard(currentIndex);
+      }, 3500);
+    }
+
+    function pauseAutoScroll() {
+      isPaused = true;
+      stopAutoScroll();
+    }
+
+    function resumeAutoScrollSoon(delay = 6000) {
+      clearTimeout(resumeTimeout);
+      resumeTimeout = setTimeout(() => {
+        currentIndex = getActiveIndex();
+        isPaused = false;
+        startAutoScroll();
+      }, delay);
+    }
+
+    track.addEventListener("mouseenter", pauseAutoScroll);
+    track.addEventListener("mouseleave", () => {
+      if (!sectionVisible) return;
       isPaused = false;
       startAutoScroll();
+    });
+
+    track.addEventListener(
+      "touchstart",
+      () => {
+        pauseAutoScroll();
+        clearTimeout(resumeTimeout);
+      },
+      { passive: true }
+    );
+
+    track.addEventListener(
+      "touchend",
+      () => {
+        currentIndex = getActiveIndex();
+        resumeAutoScrollSoon();
+      },
+      { passive: true }
+    );
+
+    track.addEventListener(
+      "touchcancel",
+      () => {
+        currentIndex = getActiveIndex();
+        resumeAutoScrollSoon();
+      },
+      { passive: true }
+    );
+
+    track.addEventListener(
+      "scroll",
+      () => {
+        if (isAutoScrolling) return;
+
+        pauseAutoScroll();
+        clearTimeout(resumeTimeout);
+        resumeTimeout = setTimeout(() => {
+          currentIndex = getActiveIndex();
+          syncDots();
+          isPaused = false;
+          startAutoScroll();
+        }, 6000);
+      },
+      { passive: true }
+    );
+
+    if (section) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            sectionVisible = entry.isIntersecting;
+            if (sectionVisible) {
+              currentIndex = getActiveIndex();
+              isPaused = false;
+              startAutoScroll();
+            } else {
+              pauseAutoScroll();
+            }
+          });
+        },
+        { threshold: 0.2, rootMargin: "0px 0px -10% 0px" }
+      );
+      observer.observe(section);
+    } else {
+      sectionVisible = true;
+      startAutoScroll();
     }
-    
-    // Pause on hover/touch
-    track.addEventListener('mouseenter', pauseAutoScroll);
-    track.addEventListener('mouseleave', resumeAutoScroll);
-    track.addEventListener('touchstart', pauseAutoScroll, { passive: true });
-    
-    // Pause when user manually scrolls
-    let scrollTimeout;
-    track.addEventListener('scroll', () => {
-      pauseAutoScroll();
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        // Update currentIndex based on current scroll position
-        const cards = Array.from(track.querySelectorAll('.testimonial-card'));
-        let closestIndex = 0;
-        let closestDist = Infinity;
-        
-        cards.forEach((card, i) => {
-          const dist = Math.abs(card.offsetLeft - track.scrollLeft);
-          if (dist < closestDist) {
-            closestDist = dist;
-            closestIndex = i;
-          }
-        });
-        
-        currentIndex = closestIndex;
-        resumeAutoScroll();
-      }, 6000); // Resume after 6 seconds (longer for testimonials since they're text-heavy)
-    }, { passive: true });
-    
-    // Start auto-scrolling
-    startAutoScroll();
   }
 
   // -------------------------------------------------------------------------
@@ -811,6 +1211,11 @@
 
     card.innerHTML = `
       <div class="location__map">
+        <button
+          type="button"
+          class="location__map-shield"
+          aria-label="${escapeAttr(t("location.mapInteract"))}"
+        ></button>
         <iframe
           title="${escapeAttr(cfg.practice.name)}"
           src="${escapeAttr(mapsEmbed)}"
@@ -830,6 +1235,8 @@
           )}</a>
         </div>
       </div>`;
+
+    bindMapScrollShield(card.querySelector(".location__map"));
   }
 
   // -------------------------------------------------------------------------
@@ -898,6 +1305,10 @@
         <div class="site-footer__bottom">
           © ${year} ${escapeHtml(cfg.practice.name)}. ${escapeHtml(t("footer.rights"))}
         </div>
+        <p class="site-footer__credit">
+          ${escapeHtml(t("footer.developedBy"))}
+          <a href="https://iagodigital.vercel.app" target="_blank" rel="noopener">IAGO Digital</a>
+        </p>
       </div>`;
   }
 
@@ -974,6 +1385,130 @@
   }
 
   // -------------------------------------------------------------------------
+  // Scroll chaining — prioritize vertical page scroll on pointer devices
+  // -------------------------------------------------------------------------
+  function initVerticalScrollChaining() {
+    document.addEventListener(
+      "wheel",
+      (event) => {
+        const chainTarget = event.target.closest("[data-vertical-scroll-chain]");
+        if (!chainTarget) return;
+
+        const { deltaX, deltaY } = event;
+        if (deltaY === 0 || Math.abs(deltaX) > Math.abs(deltaY)) return;
+
+        window.scrollBy({
+          top: deltaY,
+          left: 0,
+          behavior: "auto",
+        });
+        event.preventDefault();
+      },
+      { capture: true, passive: false }
+    );
+
+    initTouchScrollPriority();
+  }
+
+  function initTouchScrollPriority() {
+    const getChainContainer = (target) => {
+      if (!(target instanceof Element)) return null;
+      const container = target.closest("[data-vertical-scroll-chain]");
+      if (!container || container.hasAttribute("data-embla")) return null;
+      return container;
+    };
+
+    document.addEventListener(
+      "touchstart",
+      (event) => {
+        if (event.touches.length !== 1) return;
+
+        const container = getChainContainer(event.target);
+        if (!container) return;
+
+        container._touchScroll = {
+          x: event.touches[0].clientX,
+          y: event.touches[0].clientY,
+          left: container.scrollLeft,
+          axis: null,
+        };
+      },
+      { capture: true, passive: true }
+    );
+
+    document.addEventListener(
+      "touchmove",
+      (event) => {
+        const container = getChainContainer(event.target);
+        const touchScroll = container?._touchScroll;
+        if (!container || !touchScroll || event.touches.length !== 1) return;
+
+        const dx = event.touches[0].clientX - touchScroll.x;
+        const dy = event.touches[0].clientY - touchScroll.y;
+
+        if (!touchScroll.axis) {
+          if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+          touchScroll.axis = Math.abs(dy) >= Math.abs(dx) ? "y" : "x";
+        }
+
+        if (touchScroll.axis === "y") {
+          container.scrollLeft = touchScroll.left;
+        }
+      },
+      { capture: true, passive: true }
+    );
+
+    const clearTouchScroll = (event) => {
+      const container = getChainContainer(event.target);
+      if (container?._touchScroll) {
+        delete container._touchScroll;
+      }
+    };
+
+    document.addEventListener("touchend", clearTouchScroll, { capture: true, passive: true });
+    document.addEventListener("touchcancel", clearTouchScroll, { capture: true, passive: true });
+  }
+
+  function bindMapScrollShield(map) {
+    if (!map) return;
+
+    const shield = map.querySelector(".location__map-shield");
+    if (!shield) return;
+
+    shield.addEventListener(
+      "wheel",
+      (event) => {
+        const { deltaX, deltaY } = event;
+        if (deltaY === 0 || Math.abs(deltaX) > Math.abs(deltaY)) return;
+
+        window.scrollBy({
+          top: deltaY,
+          left: 0,
+          behavior: "auto",
+        });
+        event.preventDefault();
+      },
+      { passive: false }
+    );
+
+    shield.addEventListener("click", () => {
+      map.classList.add("is-interactive");
+    });
+
+    if (!bindMapScrollShield.outsideBound) {
+      bindMapScrollShield.outsideBound = true;
+      document.addEventListener("click", (event) => {
+        document.querySelectorAll(".location__map.is-interactive").forEach((activeMap) => {
+          if (!activeMap.contains(event.target)) {
+            activeMap.classList.remove("is-interactive");
+          }
+        });
+      });
+    }
+  }
+  bindMapScrollShield.outsideBound = false;
+
+  // -------------------------------------------------------------------------
   // Header — hide on scroll down, show on scroll up (iOS-friendly)
   // -------------------------------------------------------------------------
   function initHeaderScroll() {
@@ -1032,7 +1567,7 @@
   // -------------------------------------------------------------------------
   // Parallax — transform-based (iOS Safari friendly)
   // -------------------------------------------------------------------------
-  // NOTE: Parallax is now handled by initFixedHeroBackground() in the animation system above
+  // Handled by initHeroParallax() and initSectionParallax() in the animation system
 
   // =========================================================================
   // SCROLL ANIMATIONS & EFFECTS
@@ -1041,6 +1576,7 @@
   function initAnimations() {
     if (prefersReducedMotion.matches) {
       console.log('[Animations] Respecting prefers-reduced-motion');
+      document.body.classList.add('hero-loaded');
       return;
     }
 
@@ -1049,16 +1585,16 @@
     // 1. Hero entrance animation (on load, not scroll-triggered)
     initHeroEntrance();
     
-    // 2. Fixed hero background effect
-    initFixedHeroBackground();
+    // 2. Hero parallax — media, veil, and content depth layers
+    initHeroParallax();
     
-    // 3. Scroll-triggered animations for all sections
+    // 3. Section background parallax on scroll
+    initSectionParallax();
+    
+    // 4. Scroll-triggered animations for all sections
     initScrollAnimations();
     
-    // 4. Gallery navigation
-    initGalleryNav();
-    
-    // 5. Show debug overlay if enabled
+    // 6. Show debug overlay if enabled
     if (DEBUG_MODE) {
       createDebugOverlay();
     }
@@ -1070,66 +1606,126 @@
   // HERO - Fixed background + slide-in entrance
   // -------------------------------------------------------------------------
   function initHeroEntrance() {
-    // Trigger hero content slide-in from right
+    // Trigger hero content slide-in from left
     setTimeout(() => {
       document.body.classList.add('hero-loaded');
-      logDebug('hero-content: slide-right FIRED');
+      logDebug('hero-content: slide-left FIRED');
     }, 150);
   }
 
-  function initFixedHeroBackground() {
-    // JS-based fixed background (iOS Safari compatible)
-    // The background stays put while content scrolls over it
+  function initHeroParallax() {
     const hero = document.querySelector('[data-hero]');
     const media = document.querySelector('[data-hero-media]');
-    
+    const veil = document.querySelector('.hero__veil');
+    const content = document.querySelector('.hero__content');
+
     if (!hero || !media) return;
 
     let ticking = false;
     let active = true;
 
-    // Optimize with IntersectionObserver
     const io = new IntersectionObserver(
       ([entry]) => {
         active = entry.isIntersecting;
         if (!active) {
-          media.style.transform = 'translate3d(0, 0, 0)';
+          media.style.transform = 'translate3d(0, 0, 0) scale(1)';
+          if (veil) veil.style.setProperty('--hero-veil-y', '0px');
+          if (content) content.style.setProperty('--hero-content-y', '0px');
         }
       },
       { rootMargin: '50% 0px' }
     );
     io.observe(hero);
 
-    function updateBackground() {
+    function updateHeroParallax() {
       ticking = false;
       if (!active || prefersReducedMotion.matches) {
-        media.style.transform = 'translate3d(0, 0, 0)';
+        media.style.transform = 'translate3d(0, 0, 0) scale(1)';
+        if (veil) veil.style.setProperty('--hero-veil-y', '0px');
+        if (content) content.style.setProperty('--hero-content-y', '0px');
         return;
       }
 
       const rect = hero.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      
-      // Keep background fixed by counteracting scroll
-      // This creates the "fixed" effect without CSS background-attachment
       const scrolled = Math.max(0, -rect.top);
-      const progress = Math.min(scrolled / viewportHeight, 1);
-      
-      // Slight parallax on the background (moves slower than scroll)
-      const offset = scrolled * 0.5;
-      media.style.transform = `translate3d(0, ${offset.toFixed(2)}px, 0)`;
+      const heroHeight = Math.max(rect.height, 1);
+      const progress = Math.min(scrolled / heroHeight, 1);
+
+      // Background moves slower than scroll — classic parallax
+      const mediaOffset = scrolled * 0.45;
+      const scale = 1 + progress * 0.08;
+      media.style.transform = `translate3d(0, ${mediaOffset.toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
+
+      // Veil drifts gently for layered depth
+      if (veil) {
+        veil.style.setProperty('--hero-veil-y', `${(scrolled * 0.2).toFixed(2)}px`);
+      }
+
+      // Foreground text moves slightly faster than the image
+      if (content) {
+        content.style.setProperty('--hero-content-y', `${(scrolled * 0.28).toFixed(2)}px`);
+      }
     }
 
     function onScroll() {
       if (ticking) return;
       ticking = true;
-      requestAnimationFrame(updateBackground);
+      requestAnimationFrame(updateHeroParallax);
     }
 
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll, { passive: true });
-    
-    updateBackground();
+    updateHeroParallax();
+  }
+
+  function initSectionParallax() {
+    const parallaxSections = document.querySelectorAll(
+      '[data-section], [data-section="trust"], .trust'
+    );
+
+    if (!parallaxSections.length) return;
+
+    const speeds = {
+      trust: 0.05,
+      services: 0.1,
+      dentists: 0.08,
+      gallery: 0.11,
+      testimonials: 0,
+      insurance: 0.07,
+      location: 0.08,
+    };
+
+    let ticking = false;
+
+    function updateSectionParallax() {
+      ticking = false;
+      if (prefersReducedMotion.matches) {
+        parallaxSections.forEach((section) => section.style.removeProperty('--parallax-y'));
+        return;
+      }
+
+      const viewportCenter = window.innerHeight * 0.5;
+
+      parallaxSections.forEach((section) => {
+        const key = section.getAttribute('data-section') || 'trust';
+        const speed = speeds[key] ?? 0.08;
+        const rect = section.getBoundingClientRect();
+        const sectionCenter = rect.top + rect.height * 0.5;
+        const distance = sectionCenter - viewportCenter;
+        const offset = distance * speed * -0.35;
+        section.style.setProperty('--parallax-y', `${offset.toFixed(2)}px`);
+      });
+    }
+
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(updateSectionParallax);
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    updateSectionParallax();
   }
 
   // -------------------------------------------------------------------------
@@ -1171,6 +1767,7 @@
     setupInsuranceAnimations();
     setupLocationAnimations();
     setupSectionHeaders();
+    setupFooterAnimations();
   }
 
   // TRUST BAR - Staggered fade up
@@ -1196,37 +1793,40 @@
     });
   }
 
-  // DENTISTS - Entire card slides in
+  // DENTISTS - Entire card slides in (static grid only; carousel uses Embla transforms)
   function setupDentistsAnimations() {
-    const dentistCards = document.querySelectorAll('.dentist-card');
+    const dentistCards = document.querySelectorAll(".dentist-card:not([data-clone])");
     dentistCards.forEach((card, i) => {
-      const direction = i % 2 === 0 ? 'slide-left' : 'slide-right';
-      card.setAttribute('data-animate', direction);
-      card.setAttribute('data-anim-label', `dentist-card-${i + 1}`);
+      if (card.closest(".dentists__carousel--active")) return;
+
+      const direction = i % 2 === 0 ? "slide-left" : "slide-right";
+      card.setAttribute("data-animate", direction);
+      card.setAttribute("data-anim-label", `dentist-card-${i + 1}`);
       animationObserver.observe(card);
     });
   }
 
-  // GALLERY - Scale + fade with stagger
+  // GALLERY - Scale + fade with stagger (static layouts only; carousel uses Embla transforms)
   function setupGalleryAnimations() {
-    const galleryItems = document.querySelectorAll('.gallery__item');
+    const galleryItems = document.querySelectorAll(".gallery__item:not([data-clone])");
     galleryItems.forEach((item, i) => {
-      item.setAttribute('data-animate', 'fade-scale');
-      item.setAttribute('data-anim-label', `gallery-item-${i + 1}`);
+      if (item.closest(".gallery__carousel--active")) return;
+
+      item.setAttribute("data-animate", "fade-scale");
+      item.setAttribute("data-anim-label", `gallery-item-${i + 1}`);
       item.style.transitionDelay = `${Math.min(i * 60, 400)}ms`;
       animationObserver.observe(item);
     });
   }
 
-  // TESTIMONIALS - Fade up with stagger
+  // TESTIMONIALS - Fade the block once (cards sit in a horizontal track)
   function setupTestimonialsAnimations() {
-    const testimonialCards = document.querySelectorAll('.testimonial-card');
-    testimonialCards.forEach((card, i) => {
-      card.setAttribute('data-animate', 'slide-up');
-      card.setAttribute('data-anim-label', `testimonial-${i + 1}`);
-      card.style.transitionDelay = `${i * 120}ms`;
-      animationObserver.observe(card);
-    });
+    const wrap = document.querySelector(".testimonials__wrap");
+    if (!wrap) return;
+
+    wrap.setAttribute("data-animate", "fade");
+    wrap.setAttribute("data-anim-label", "testimonials-wrap");
+    animationObserver.observe(wrap);
   }
 
   // INSURANCE & FINANCING - Simple fade for logo grids
@@ -1260,6 +1860,16 @@
     });
   }
 
+  // FOOTER - Fade up on scroll
+  function setupFooterAnimations() {
+    const footerInner = document.querySelector('.site-footer__inner');
+    if (footerInner) {
+      footerInner.setAttribute('data-animate', 'slide-up');
+      footerInner.setAttribute('data-anim-label', 'footer');
+      animationObserver.observe(footerInner);
+    }
+  }
+
   // Re-initialize animations after content changes (language swap)
   function refreshAnimations() {
     if (!animationObserver || prefersReducedMotion.matches) return;
@@ -1279,10 +1889,8 @@
     setupInsuranceAnimations();
     setupLocationAnimations();
     setupSectionHeaders();
+    setupFooterAnimations();
   }
-
-  // -------------------------------------------------------------------------
-  // DEBUG OVERLAY
   // -------------------------------------------------------------------------
   function logDebug(message) {
     console.log(`[Animations] ${message}`);
@@ -1324,182 +1932,6 @@
         return `<div class="${className}">→ ${entry.message}</div>`;
       })
       .join('');
-  }
-
-  // -------------------------------------------------------------------------
-  // GALLERY NAVIGATION
-  // -------------------------------------------------------------------------
-  function initGalleryNav() {
-    const scroller = document.querySelector('[data-gallery-scroller]');
-    const prevBtn = document.querySelector('[data-gallery-prev]');
-    const nextBtn = document.querySelector('[data-gallery-next]');
-    
-    if (!scroller || !prevBtn || !nextBtn) return;
-
-    function updateButtons() {
-      const isAtStart = scroller.scrollLeft <= 10;
-      const isAtEnd = scroller.scrollLeft >= scroller.scrollWidth - scroller.clientWidth - 10;
-      
-      prevBtn.disabled = isAtStart;
-      nextBtn.disabled = isAtEnd;
-    }
-
-    function scrollToNext() {
-      const items = scroller.querySelectorAll('.gallery__item');
-      if (items.length === 0) return;
-      
-      const scrollerCenter = scroller.scrollLeft + (scroller.clientWidth / 2);
-      let nextItem = null;
-      
-      // Find the next item after the current center position
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        const itemCenter = item.offsetLeft + (item.offsetWidth / 2);
-        if (itemCenter > scrollerCenter + 50) {
-          nextItem = item;
-          break;
-        }
-      }
-      
-      if (nextItem) {
-        const itemLeft = nextItem.offsetLeft;
-        const itemWidth = nextItem.offsetWidth;
-        const scrollerWidth = scroller.clientWidth;
-        const scrollPosition = itemLeft - (scrollerWidth / 2) + (itemWidth / 2);
-        
-        scroller.scrollTo({
-          left: Math.max(0, scrollPosition),
-          behavior: prefersReducedMotion.matches ? 'auto' : 'smooth'
-        });
-      }
-    }
-
-    function scrollToPrev() {
-      const items = scroller.querySelectorAll('.gallery__item');
-      if (items.length === 0) return;
-      
-      const scrollerCenter = scroller.scrollLeft + (scroller.clientWidth / 2);
-      let prevItem = null;
-      
-      // Find the previous item before the current center position
-      for (let i = items.length - 1; i >= 0; i--) {
-        const item = items[i];
-        const itemCenter = item.offsetLeft + (item.offsetWidth / 2);
-        if (itemCenter < scrollerCenter - 50) {
-          prevItem = item;
-          break;
-        }
-      }
-      
-      if (prevItem) {
-        const itemLeft = prevItem.offsetLeft;
-        const itemWidth = prevItem.offsetWidth;
-        const scrollerWidth = scroller.clientWidth;
-        const scrollPosition = itemLeft - (scrollerWidth / 2) + (itemWidth / 2);
-        
-        scroller.scrollTo({
-          left: Math.max(0, scrollPosition),
-          behavior: prefersReducedMotion.matches ? 'auto' : 'smooth'
-        });
-      }
-    }
-
-    nextBtn.addEventListener('click', scrollToNext);
-    prevBtn.addEventListener('click', scrollToPrev);
-    scroller.addEventListener('scroll', updateButtons, { passive: true });
-    
-    updateButtons();
-    
-    // Auto-scroll gallery continuously
-    initGalleryAutoScroll(scroller);
-  }
-
-  // -------------------------------------------------------------------------
-  // GALLERY AUTO-SCROLL - Rebuilt for reliability
-  // -------------------------------------------------------------------------
-  function initGalleryAutoScroll(scroller) {
-    if (!scroller || prefersReducedMotion.matches) return;
-    
-    const items = scroller.querySelectorAll('.gallery__item');
-    if (items.length === 0) return;
-    
-    let autoScrollInterval = null;
-    let isPaused = false;
-    let currentIndex = 0;
-    
-    function scrollToIndex(index) {
-      const item = items[index];
-      if (!item) return;
-      
-      // Calculate scroll position to center the item
-      const itemLeft = item.offsetLeft;
-      const itemWidth = item.offsetWidth;
-      const scrollerWidth = scroller.clientWidth;
-      const scrollPosition = itemLeft - (scrollerWidth / 2) + (itemWidth / 2);
-      
-      scroller.scrollTo({
-        left: Math.max(0, scrollPosition),
-        behavior: 'smooth'
-      });
-    }
-    
-    function startAutoScroll() {
-      if (isPaused || autoScrollInterval) return;
-      
-      autoScrollInterval = setInterval(() => {
-        if (isPaused) return;
-        
-        currentIndex = (currentIndex + 1) % items.length;
-        scrollToIndex(currentIndex);
-      }, 3000); // Scroll every 3 seconds
-    }
-    
-    function pauseAutoScroll() {
-      isPaused = true;
-      if (autoScrollInterval) {
-        clearInterval(autoScrollInterval);
-        autoScrollInterval = null;
-      }
-    }
-    
-    function resumeAutoScroll() {
-      isPaused = false;
-      startAutoScroll();
-    }
-    
-    // Pause on hover/touch
-    scroller.addEventListener('mouseenter', pauseAutoScroll);
-    scroller.addEventListener('mouseleave', resumeAutoScroll);
-    scroller.addEventListener('touchstart', pauseAutoScroll, { passive: true });
-    
-    // Pause when user manually scrolls
-    let scrollTimeout;
-    scroller.addEventListener('scroll', () => {
-      pauseAutoScroll();
-      clearTimeout(scrollTimeout);
-      
-      // Update current index based on scroll position
-      scrollTimeout = setTimeout(() => {
-        const scrollerCenter = scroller.scrollLeft + (scroller.clientWidth / 2);
-        let closestIndex = 0;
-        let closestDistance = Infinity;
-        
-        items.forEach((item, index) => {
-          const itemCenter = item.offsetLeft + (item.offsetWidth / 2);
-          const distance = Math.abs(scrollerCenter - itemCenter);
-          if (distance < closestDistance) {
-            closestDistance = distance;
-            closestIndex = index;
-          }
-        });
-        
-        currentIndex = closestIndex;
-        resumeAutoScroll();
-      }, 5000); // Resume after 5 seconds
-    }, { passive: true });
-    
-    // Start auto-scrolling
-    startAutoScroll();
   }
 
   // -------------------------------------------------------------------------
