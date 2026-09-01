@@ -1,29 +1,32 @@
 # Images
 
-Drop client media here and reference the paths from `js/config.js`.
+Drop client media here and reference paths from `js/config.js`.
 
-## Demo template images (included)
+## Template demo files (included)
 
-These ship with the template so the site looks complete out of the box.
-**Replace them** before going live for a real practice.
+These are the only images shipped with the template. Replace them per client.
 
 | File | Used for |
 | --- | --- |
 | `hero.jpg` | Hero background (`branding.heroImageUrl`) |
 | `dentist.jpg` | Dentist photo (`dentists[].photoUrl`) |
 | `gallery/smile-01.jpg` … `smile-05.jpg` | Smile gallery (`gallery[]`) |
-| `insurance/*.svg` | Insurance logo placeholders |
+| `financing/financing-01.svg` | First financing image (`financingImages[0]`) |
+| `financing/financing-02.svg` | Second financing image (`financingImages[1]`) |
 
 ## Per-client layout
 
 ```
 assets/images/
   hero.jpg
-  dentist-*.jpg
+  dentist.jpg          (or dentist-name.jpg)
   gallery/
     smile-01.jpg
+    smile-02.jpg
     …
-  insurance/
-    delta-dental.svg
-    …
+  financing/
+    financing-01.jpg     (replace SVG placeholders if needed)
+    financing-02.jpg
 ```
+
+Optional: add `logo.png` / `logo.svg` and set `branding.logoUrl` in config.

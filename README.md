@@ -29,29 +29,27 @@ This file is the **only** place you should change practice content. Comments in 
 | Dentist photos & bios | `dentists` |
 | Services list | `services` |
 | Testimonials | `testimonials` |
-| Insurance logos | `insuranceLogos` |
+| Financing images | `financingImages` |
 | Smile gallery images | `gallery` |
 | Social links | `socials` |
 | Default language (`es` recommended) | `defaultLanguage` |
 | Button / nav / section labels | `ui.en` / `ui.es` |
 
-**Empty arrays hide sections.** If `testimonials: []` (or gallery / insurance / dentists / services is empty), that section and its nav link are omitted automatically.
+**Empty arrays hide sections.** If `testimonials: []` (or gallery / financing / dentists / services is empty), that section and its nav link are omitted automatically.
 
 ### 2. Drop images in `assets/images/`
 
-Suggested layout:
+The template ships with a **minimal demo set** (9 files). Replace them per client:
 
 ```
 assets/images/
   hero.jpg                 ← branding.heroImageUrl
-  dentist-elena.jpg        ← dentists[].photoUrl
+  dentist.jpg              ← dentists[].photoUrl
   gallery/
-    smile-01.jpg
-    smile-02.jpg
-  insurance/
-    delta-dental.svg
-    cigna.svg
-    …
+    smile-01.jpg … smile-05.jpg
+  financing/
+    financing-01.svg
+    financing-02.svg
 ```
 
 Then point the matching fields in `config.js` at those paths, for example:
@@ -60,7 +58,7 @@ Then point the matching fields in `config.js` at those paths, for example:
 heroImageUrl: "assets/images/hero.jpg",
 ```
 
-Placeholder Unsplash URLs ship in the demo config so the template looks complete out of the box — replace them before going live.
+Demo images are included so the site looks complete out of the box — replace them before going live.
 
 ### 3. Optional logo
 
@@ -73,7 +71,7 @@ index.html          Shell markup (mount points only — no client copy)
 css/styles.css      Mobile-first styles, shadow system, responsive layout
 js/config.js        ★ Single source of truth for all content
 js/app.js           Renders sections, i18n, parallax, accordion, carousels
-assets/images/      Client photos, gallery, insurance logos
+assets/images/      Demo hero, dentist, gallery, and financing assets
 vercel.json         Static deploy settings for Vercel
 ```
 
@@ -111,7 +109,7 @@ vercel --prod
 - [ ] Replace demo name, phone, address, hours, and email
 - [ ] Replace hero, dentist, and gallery images with client assets
 - [ ] Confirm EN + ES copy for tagline, bios, services, testimonials
-- [ ] Update insurance logos to match accepted providers
+- [ ] Replace financing images if needed
 - [ ] Set real Instagram / Facebook URLs (or clear them to hide icons)
 - [ ] Tap-test click-to-call and directions on a real phone
 - [ ] Smoke-test parallax scroll on iOS Safari
