@@ -74,7 +74,7 @@ const config = {
       whatsapp: { label: "Chat on WhatsApp" },
       footer: {
         contact: "Contact", hours: "Hours", follow: "Follow Us",
-        rights: "All rights reserved.", developedBy: "Developed by",
+        rights: "All rights reserved.", developedBy: "Developed by iAGO Digital",
       },
       langToggle: { label: "Language", en: "EN", es: "ES" },
       gallery: {
@@ -115,7 +115,7 @@ const config = {
       whatsapp: { label: "Chatear por WhatsApp" },
       footer: {
         contact: "Contacto", hours: "Horario", follow: "Síguenos",
-        rights: "Todos los derechos reservados.", developedBy: "Desarrollado por",
+        rights: "Todos los derechos reservados.", developedBy: "Desarrollado por iAGO Digital",
       },
       langToggle: { label: "Idioma", en: "EN", es: "ES" },
       gallery: {

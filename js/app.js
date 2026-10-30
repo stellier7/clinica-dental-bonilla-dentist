@@ -1465,11 +1465,11 @@
         <div class="site-footer__bottom">
           © ${year} ${escapeHtml(cfg.practice.name)}. ${escapeHtml(t("footer.rights"))}
         </div>
-        <p class="site-footer__credit">
-          ${escapeHtml(t("footer.developedBy"))}
-          <a href="https://iagodigital.vercel.app" target="_blank" rel="noopener noreferrer">IAGO Digital</a>
-        </p>
-      </div>`;
+      </div>
+      <a class="iago-footer" href="https://www.iagodigital.com" target="_blank" rel="noopener noreferrer">
+        <span class="iago-footer__mark" aria-hidden="true">iA<span class="iago-footer__go">GO</span><span class="iago-footer__dot">.</span></span>
+        <span class="iago-footer__text">${escapeHtml(t("footer.developedBy"))}</span>
+      </a>`;
   }
 
   // -------------------------------------------------------------------------

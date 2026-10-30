@@ -106,7 +106,12 @@ async function run() {
 
       const footerText = await page.locator("[data-footer]").innerText();
       assert(!footerText.includes("footer.developedBy"), "Footer leaked an untranslated key");
-      assert(footerText.includes("Desarrollado por"), "Spanish footer credit is missing");
+      assert(footerText.includes("Desarrollado por iAGO Digital"), "Spanish iAGO footer is missing");
+      const iago = page.locator(".iago-footer");
+      const iagoHref = await iago.getAttribute("href");
+      assert(iagoHref === "https://www.iagodigital.com", `Expected iAGO site link, got ${iagoHref}`);
+      const iagoBox = await iago.boundingBox();
+      assert(iagoBox && iagoBox.width > 0 && iagoBox.height >= 44, "iAGO footer should be a visible tap target");
 
       const overflow = await page.evaluate(
         () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1
@@ -119,7 +124,7 @@ async function run() {
         messagePart: "book an appointment",
       });
       const englishFooter = await page.locator("[data-footer]").innerText();
-      assert(englishFooter.includes("Developed by"), "English footer credit is missing");
+      assert(englishFooter.includes("Developed by iAGO Digital"), "English iAGO footer is missing");
 
       await page.close();
     }
