@@ -78,7 +78,7 @@ vercel.json         Static deploy settings for Vercel
 ## Design / behavior notes
 
 - **Mobile-first** breakpoints, with hamburger nav on small screens and a full nav from ~900px up.
-- **Sticky “Book Appointment” bar** on mobile → `tel:` click-to-call.
+- **Floating WhatsApp button** fixed to the bottom-right. It pulses, opens a prefilled chat to the practice number, and stays still when the visitor prefers reduced motion.
 - **Hero parallax** uses a JS `translate3d` on a dedicated media layer (not `background-attachment: fixed`) for smoother iOS Safari behavior. Respects `prefers-reduced-motion`.
 - **Services**: single-open accordion on mobile; hover-lift grid on tablet/desktop.
 - **Touch targets** sized at least 44px.

@@ -123,7 +123,7 @@
     renderFinancing();
     renderLocation();
     renderFooter();
-    renderStickyBar();
+    renderWhatsAppFab();
     applyStaticI18n();
     updateGalleryLightboxLabels();
     updateDirectionsPickerLabels();
@@ -237,24 +237,27 @@
       el.href = whatsappHref(bookMessage);
       el.target = "_blank";
       el.rel = "noopener noreferrer";
-      
-      // Sticky / header / hero share the book label
-      if (el.closest("[data-sticky-bar]")) {
-        el.textContent = t("stickyBar.cta");
-      } else if (el.classList.contains("btn--header-cta")) {
-        el.textContent = t("nav.book");
-      } else {
-        el.textContent = t("hero.cta");
-      }
+      el.textContent = el.classList.contains("btn--header-cta") ? t("nav.book") : t("hero.cta");
     });
   }
 
-  function renderStickyBar() {
-    const bar = document.querySelector("[data-sticky-bar]");
-    if (!bar) return;
-    // Always useful when phone exists; hide only if no phone configured
-    const hasPhone = Boolean((cfg.practice.phoneTel || cfg.practice.phone || "").replace(/\D/g, ""));
-    bar.hidden = !hasPhone;
+  function renderWhatsAppFab() {
+    const fab = document.querySelector("[data-whatsapp-fab]");
+    if (!fab) return;
+
+    const digits = getInternationalPhoneDigits();
+    if (!digits) {
+      fab.hidden = true;
+      return;
+    }
+
+    const bookMessage = lang === "es"
+      ? "Hola, me gustaría agendar una cita"
+      : "Hello, I would like to book an appointment";
+
+    fab.hidden = false;
+    fab.href = whatsappHref(bookMessage);
+    fab.setAttribute("aria-label", t("whatsapp.label"));
   }
 
   // -------------------------------------------------------------------------
@@ -1464,7 +1467,7 @@
         </div>
         <p class="site-footer__credit">
           ${escapeHtml(t("footer.developedBy"))}
-          <a href="https://iagodigital.vercel.app" target="_blank" rel="noopener">IAGO Digital</a>
+          <a href="https://iagodigital.vercel.app" target="_blank" rel="noopener noreferrer">IAGO Digital</a>
         </p>
       </div>`;
   }

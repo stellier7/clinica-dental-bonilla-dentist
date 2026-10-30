@@ -46,6 +46,7 @@ const config = {
         home: "Home", services: "Services", dentists: "Our Team", gallery: "Gallery",
         testimonials: "Reviews", financing: "Financing", location: "Location",
         book: "Book Appointment", openMenu: "Open menu", closeMenu: "Close menu",
+        skip: "Skip to content",
       },
       hero: { badge: "New Patients Welcome", cta: "Book Appointment" },
       trust: {
@@ -70,8 +71,11 @@ const config = {
         mapInteract: "Tap to interact with the map",
         days: { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" },
       },
-      stickyBar: { cta: "Book Appointment" },
-      footer: { contact: "Contact", hours: "Hours", follow: "Follow Us", rights: "All rights reserved." },
+      whatsapp: { label: "Chat on WhatsApp" },
+      footer: {
+        contact: "Contact", hours: "Hours", follow: "Follow Us",
+        rights: "All rights reserved.", developedBy: "Developed by",
+      },
       langToggle: { label: "Language", en: "EN", es: "ES" },
       gallery: {
         viewImage: "View image", close: "Close preview", previous: "Previous image",
@@ -83,6 +87,7 @@ const config = {
         home: "Inicio", services: "Servicios", dentists: "Nuestro Equipo", gallery: "Galería",
         testimonials: "Opiniones", financing: "Financiamiento", location: "Ubicación",
         book: "Agendar Cita", openMenu: "Abrir menú", closeMenu: "Cerrar menú",
+        skip: "Saltar al contenido",
       },
       hero: { badge: "Nuevos Pacientes Bienvenidos", cta: "Agendar Cita" },
       trust: {
@@ -107,8 +112,11 @@ const config = {
         mapInteract: "Toca para interactuar con el mapa",
         days: { mon: "Lunes", tue: "Martes", wed: "Miércoles", thu: "Jueves", fri: "Viernes", sat: "Sábado", sun: "Domingo" },
       },
-      stickyBar: { cta: "Agendar Cita" },
-      footer: { contact: "Contacto", hours: "Horario", follow: "Síguenos", rights: "Todos los derechos reservados." },
+      whatsapp: { label: "Chatear por WhatsApp" },
+      footer: {
+        contact: "Contacto", hours: "Horario", follow: "Síguenos",
+        rights: "Todos los derechos reservados.", developedBy: "Desarrollado por",
+      },
       langToggle: { label: "Idioma", en: "EN", es: "ES" },
       gallery: {
         viewImage: "Ver imagen", close: "Cerrar vista previa", previous: "Imagen anterior",
